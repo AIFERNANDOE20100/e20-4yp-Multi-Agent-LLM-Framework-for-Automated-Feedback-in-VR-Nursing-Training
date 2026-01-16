@@ -76,7 +76,7 @@ async def run_full_system_test():
 
     # Load scenario metadata for patient history
     scenario_meta = session_manager.get_session(session_id)["scenario_metadata"]
-    print(f"[SCENARIO METADATA LOADED] {scenario_meta}")
+
     patient_history = scenario_meta.get("patient_history", "")
 
     # =================================================
@@ -119,7 +119,6 @@ async def run_full_system_test():
     # Prepare context for evaluation
     context = await evaluation_service.prepare_agent_context(
         session_id=session_id,
-        scenario_id=scenario_id,
         step="HISTORY"
     )
 
