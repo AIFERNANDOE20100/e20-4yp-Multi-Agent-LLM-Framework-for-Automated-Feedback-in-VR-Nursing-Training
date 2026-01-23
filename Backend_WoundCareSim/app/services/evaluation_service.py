@@ -10,30 +10,37 @@ from app.utils.schema import EvaluatorResponse
 from app.services.conversation_manager import ConversationManager
 from app.utils.feedback_schema import Feedback
 
+# NEW (Week-9)
+from app.agents.feedback_narrator_agent import FeedbackNarratorAgent
+
 
 class EvaluationService:
     """
-    FINAL Evaluation Orchestrator
+    FINAL Evaluation Orchestrator (Week-9)
 
     - Feedback-only (formative)
     - No enforcement or locking
-    - Student feedback comes directly from evaluator agents
-    - Coordinator is numeric-only (scores, readiness)
-    - Staff nurse provides conversational step guidance
-    - Enum-safe state machine usage
+    - Evaluator agents produce truth
+    - Coordinator is numeric-only
+    - Feedback narration is presentation-only
+    - Staff nurse provides conversational guidance
     """
 
     def __init__(
         self,
         coordinator: Coordinator,
         session_manager: SessionManager,
-        staff_nurse_agent: Optional[Any] = None
+        staff_nurse_agent: Optional[Any] = None,
+        feedback_narrator_agent: Optional[FeedbackNarratorAgent] = None,
     ):
         self.coordinator = coordinator
         self.session_manager = session_manager
         self.mcq_evaluator = MCQEvaluator()
         self.conversation_manager = ConversationManager()
         self.staff_nurse_agent = staff_nurse_agent
+
+        # Week-9: Presentation-only agent
+        self.feedback_narrator_agent = feedback_narrator_agent
 
     # ------------------------------------------------
     # Context preparation for evaluator agents
@@ -128,9 +135,9 @@ class EvaluationService:
             coordinator_output["mcq_result"] = mcq_result
 
         # ------------------------------------------------
-        # Build STUDENT-FACING feedback from AGENTS
+        # Build RAW feedback from evaluator agents
         # ------------------------------------------------
-        feedback_items: List[Dict[str, Any]] = []
+        raw_feedback_items: List[Dict[str, Any]] = []
 
         for ev in evaluator_outputs:
             agent_text_parts = []
@@ -153,7 +160,7 @@ class EvaluationService:
                 ev.explanation
             )
 
-            feedback_items.append(
+            raw_feedback_items.append(
                 Feedback(
                     text=" ".join(agent_text_parts),
                     speaker="system",
@@ -168,7 +175,7 @@ class EvaluationService:
                 ).to_dict()
             )
 
-        # ---- Staff Nurse conversational guidance ----
+        # ---- Staff Nurse conversational guidance (RAW) ----
         if self.staff_nurse_agent and student_message_to_nurse:
             try:
                 next_step_enum = next_step(current_step)
@@ -182,7 +189,7 @@ class EvaluationService:
                 next_step=next_step_str
             )
 
-            feedback_items.append(
+            raw_feedback_items.append(
                 Feedback(
                     text=staff_nurse_text,
                     speaker="staff_nurse",
@@ -192,13 +199,29 @@ class EvaluationService:
             )
 
         # ------------------------------------------------
+        # Week-9: Feedback Narration (Presentation Layer)
+        # ------------------------------------------------
+        narrated_feedback = None
+
+        if self.feedback_narrator_agent:
+            try:
+                narrated_feedback = await self.feedback_narrator_agent.narrate(
+                    raw_feedback=raw_feedback_items,
+                    step=current_step.value
+                )
+            except Exception:
+                # Fail-safe: narration must never break evaluation
+                narrated_feedback = None
+
+        # ------------------------------------------------
         # Final payload
         # ------------------------------------------------
         payload = {
             "step": current_step.value,
             "scores": coordinator_output.get("scores"),
             "readiness": coordinator_output.get("readiness"),
-            "feedback": feedback_items,
+            "raw_feedback": raw_feedback_items,
+            "narrated_feedback": narrated_feedback,
         }
 
         self.session_manager.store_last_evaluation(
