@@ -3,7 +3,7 @@ from typing import Dict, List, Any, Optional
 from app.rag.retriever import retrieve_with_rag
 from app.core.coordinator import Coordinator
 from app.services.session_manager import SessionManager
-from app.core.state_machine import Step, next_step
+from app.core.state_machine import Step
 
 from app.utils.mcq_evaluator import MCQEvaluator
 from app.utils.schema import EvaluatorResponse
@@ -15,14 +15,17 @@ from app.agents.feedback_narrator_agent import FeedbackNarratorAgent
 
 class EvaluationService:
     """
-    FINAL Evaluation Orchestrator (Week-9)
-
-    - Feedback-only (formative)
-    - No enforcement or locking
-    - Evaluator agents produce truth
-    - Coordinator is numeric-only
-    - Feedback narration is presentation-only
-    - Staff nurse provides conversational guidance
+    Evaluation Orchestrator - Generates narrated feedback for students
+    
+    Key responsibilities:
+    1. Run evaluator agents (Communication, Knowledge for HISTORY; None for CLEANING_AND_DRESSING)
+    2. Aggregate into scores (via Coordinator) 
+    3. Generate narrated feedback paragraph (via FeedbackNarrator)
+    4. Return student-facing feedback + debugging data
+    
+    NO blocking, NO enforcement - purely formative feedback
+    
+    NOTE: CLEANING_AND_DRESSING step gets NO final evaluation (real-time feedback only)
     """
 
     def __init__(
@@ -37,8 +40,6 @@ class EvaluationService:
         self.mcq_evaluator = MCQEvaluator()
         self.conversation_manager = ConversationManager()
         self.staff_nurse_agent = staff_nurse_agent
-
-        # Week-9: Presentation-only agent
         self.feedback_narrator_agent = feedback_narrator_agent
 
     # ------------------------------------------------
@@ -49,6 +50,14 @@ class EvaluationService:
         session_id: str,
         step: str
     ) -> Dict[str, Any]:
+        """
+        Prepare evaluation context for agent evaluation.
+        
+        Includes:
+        - Scenario metadata
+        - Student input (transcript or actions)
+        - RAG guidelines specific to the step
+        """
 
         session = self.session_manager.get_session(session_id)
         if not session:
@@ -65,15 +74,14 @@ class EvaluationService:
                 step=step
             )
 
-        elif step in [Step.CLEANING.value, Step.DRESSING.value]:
+        elif step == Step.CLEANING_AND_DRESSING.value:
             action_events = session.get("action_events", [])
 
         # Step-specific RAG queries for accurate guideline retrieval
         rag_query_map = {
             Step.HISTORY.value: "patient history taking guidelines nursing communication assessment questions",
             Step.ASSESSMENT.value: "wound assessment guidelines evaluation criteria",
-            Step.CLEANING.value: "wound cleaning procedure protocol hand hygiene aseptic technique",
-            Step.DRESSING.value: "wound dressing application procedure sterile technique",
+            Step.CLEANING_AND_DRESSING.value: "wound cleaning and dressing preparation procedure protocol hand hygiene aseptic technique",
         }
         
         rag_query = rag_query_map.get(step, "clinical nursing evaluation guidelines")
@@ -82,8 +90,6 @@ class EvaluationService:
             query=rag_query,
             scenario_id=session["scenario_id"]
         )
-
-        print(f"RAG Context for step {step}:\n{rag.get('text', '')}\n{'-'*40}")
 
         return {
             "step": step,
@@ -94,7 +100,7 @@ class EvaluationService:
         }
 
     # ------------------------------------------------
-    # Aggregation + feedback construction
+    # Aggregation + narrated feedback generation
     # ------------------------------------------------
     async def aggregate_evaluations(
         self,
@@ -103,15 +109,47 @@ class EvaluationService:
         student_mcq_answers: Optional[Dict[str, str]] = None,
         student_message_to_nurse: Optional[str] = None
     ) -> Dict[str, Any]:
+        """
+        Aggregate evaluations and generate student-facing feedback.
+        
+        Returns:
+        - scores: Numeric indicators (for reporting/display) - ONLY for HISTORY and ASSESSMENT
+        - narrated_feedback: Single paragraph for student - ONLY for HISTORY and ASSESSMENT
+        - mcq_result: MCQ evaluation (ASSESSMENT step only)
+        - raw_feedback: Agent breakdowns (for terminal debugging)
+        
+        NOTE: For CLEANING_AND_DRESSING, returns minimal data (no scores, no narration)
+        """
 
         session = self.session_manager.get_session(session_id)
         if not session:
             raise ValueError("Session not found")
 
-        # ---- Convert step string â†’ enum ----
         current_step = Step(session["current_step"])
 
-        # ---- Coordinator aggregation (NUMERIC ONLY) ----
+        # ------------------------------------------------
+        # CLEANING_AND_DRESSING: No final evaluation
+        # ------------------------------------------------
+        if current_step == Step.CLEANING_AND_DRESSING:
+            payload = {
+                "step": current_step.value,
+                "scores": None,  # No scores
+                "narrated_feedback": None,  # No narration
+                "raw_feedback": [],  # No feedback
+            }
+            
+            self.session_manager.store_last_evaluation(
+                session_id=session_id,
+                evaluation=payload
+            )
+            
+            return payload
+
+        # ------------------------------------------------
+        # HISTORY and ASSESSMENT: Normal evaluation
+        # ------------------------------------------------
+        
+        # ---- Coordinator aggregation (numeric scores) ----
         coordinator_output = self.coordinator.aggregate(
             evaluations=evaluator_outputs,
             current_step=current_step.value
@@ -125,7 +163,6 @@ class EvaluationService:
             )
 
             if not questions:
-                # No questions in scenario
                 mcq_result = {
                     "total_questions": 0,
                     "correct_count": 0,
@@ -134,7 +171,6 @@ class EvaluationService:
                     "summary": "No MCQ questions available in scenario"
                 }
             elif not student_mcq_answers or len(student_mcq_answers) == 0:
-                # Questions exist but student didn't answer any
                 mcq_result = {
                     "total_questions": len(questions),
                     "correct_count": 0,
@@ -153,17 +189,16 @@ class EvaluationService:
                     "summary": f"0/{len(questions)} questions answered - Assessment incomplete"
                 }
             else:
-                # Normal evaluation with answers
                 mcq_result = self.mcq_evaluator.validate_mcq_answers(
                     student_answers=student_mcq_answers,
                     assessment_questions=questions
                 )
 
-            # IMPORTANT: Include MCQ result in coordinator output for final response
             coordinator_output["mcq_result"] = mcq_result
 
         # ------------------------------------------------
         # Build RAW feedback from evaluator agents
+        # (Used for narration, not shown directly to student)
         # ------------------------------------------------
         raw_feedback_items: List[Dict[str, Any]] = []
 
@@ -177,16 +212,10 @@ class EvaluationService:
 
             if ev.issues_detected:
                 agent_text_parts.append(
-                    "Issues: " + ", ".join(ev.issues_detected)
+                    "Areas for improvement: " + ", ".join(ev.issues_detected)
                 )
 
-            agent_text_parts.append(
-                f"Overall assessment: {ev.verdict}."
-            )
-
-            agent_text_parts.append(
-                ev.explanation
-            )
+            agent_text_parts.append(ev.explanation)
 
             raw_feedback_items.append(
                 Feedback(
@@ -203,47 +232,28 @@ class EvaluationService:
                 ).to_dict()
             )
 
-        # ---- Staff Nurse conversational guidance (RAW) ----
-        if self.staff_nurse_agent and student_message_to_nurse:
-            try:
-                next_step_enum = next_step(current_step)
-                next_step_str = next_step_enum.value
-            except ValueError:
-                next_step_str = None
-
-            staff_nurse_text = await self.staff_nurse_agent.respond(
-                student_input=student_message_to_nurse,
-                current_step=current_step.value,
-                next_step=next_step_str
-            )
-
-            raw_feedback_items.append(
-                Feedback(
-                    text=staff_nurse_text,
-                    speaker="staff_nurse",
-                    category="guidance",
-                    timing="post_step"
-                ).to_dict()
-            )
-
         # ------------------------------------------------
-        # Week-9: Feedback Narration (Presentation Layer)
+        # Generate NARRATED feedback (student-facing paragraph)
         # ------------------------------------------------
         narrated_feedback_dict = None
 
-        if self.feedback_narrator_agent:
+        if self.feedback_narrator_agent and raw_feedback_items:
             try:
                 narrated_feedback_obj = await self.feedback_narrator_agent.narrate(
                     raw_feedback=raw_feedback_items,
                     step=current_step.value
                 )
-                # FIXED: Convert Pydantic model to dict for JSON serialization
                 if narrated_feedback_obj:
                     narrated_feedback_dict = narrated_feedback_obj.model_dump()
             except Exception as e:
                 # Fail-safe: narration must never break evaluation
-                print(f"Narration failed: {e}")
-                narrated_feedback_dict = None
+                print(f"⚠️  Narration failed: {e}")
+                # Fallback to simple concatenation
+                narrated_feedback_dict = {
+                    "speaker": "system",
+                    "step": current_step.value,
+                    "message_text": " ".join([item["text"] for item in raw_feedback_items])
+                }
 
         # ------------------------------------------------
         # Final payload
@@ -251,14 +261,14 @@ class EvaluationService:
         payload = {
             "step": current_step.value,
             "scores": coordinator_output.get("scores"),
-            "raw_feedback": raw_feedback_items,
-            "narrated_feedback": narrated_feedback_dict,
+            "narrated_feedback": narrated_feedback_dict,  # Student sees this
+            "raw_feedback": raw_feedback_items,  # Debugging only
         }
 
-        # FIXED: Include MCQ result in final payload for ASSESSMENT step
         if mcq_result is not None:
             payload["mcq_result"] = mcq_result
 
+        # Store for session history
         self.session_manager.store_last_evaluation(
             session_id=session_id,
             evaluation=payload

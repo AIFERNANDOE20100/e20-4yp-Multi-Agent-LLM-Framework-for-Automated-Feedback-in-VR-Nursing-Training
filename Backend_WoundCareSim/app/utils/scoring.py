@@ -25,7 +25,8 @@ STEP_WEIGHTS = {
         # No evaluator agents run for this step
     },
     "cleaning_and_dressing": {
-        "ClinicalAgent": 1.0,  # Clinical evaluation for preparation (100%)
+        # NO FINAL EVALUATION for this step
+        # Real-time feedback only (no scores)
     },
 }
 
@@ -58,12 +59,13 @@ def aggregate_scores(
     - KnowledgeAgent score (60% weight)
     - Composite quality indicator
     
+    For assessment:
+    - MCQ-based scoring (handled separately)
+    - No agent scores
+    
     For cleaning_and_dressing:
-    - ClinicalAgent score (100% weight)
-    - Composite quality indicator based on:
-      * Action completeness (9 actions required)
-      * Mandatory actions (4 critical actions)
-      * Sequence correctness
+    - NO FINAL SCORING
+    - Real-time feedback only
     
     IMPORTANT:
     - No thresholds
@@ -76,11 +78,11 @@ def aggregate_scores(
     agent_scores: Dict[str, float] = {}
     composite_score = 0.0
 
-    # If no evaluations (e.g., ASSESSMENT step), return empty scores
+    # If no evaluations (e.g., ASSESSMENT or CLEANING_AND_DRESSING step), return empty scores
     if not evaluations:
         return {
             "agent_scores": {},
-            "step_quality_indicator": 0.0,
+            "step_quality_indicator": None,
         }
 
     # Calculate individual agent scores
@@ -103,6 +105,8 @@ def _interpret_composite_score(score: float, step: str) -> str:
     """
     Provide educational interpretation of the composite score.
     This helps students understand what the score means.
+    
+    NOTE: No interpretation for cleaning_and_dressing (no final score)
     """
     if step == "history":
         if score >= 0.85:
@@ -114,16 +118,13 @@ def _interpret_composite_score(score: float, step: str) -> str:
         else:
             return "History-taking needs significant improvement"
     
+    elif step == "assessment":
+        # Assessment uses MCQ scoring, not this
+        return "Assessment complete"
+    
     elif step == "cleaning_and_dressing":
-        if score >= 0.85:
-            return "Excellent preparation - all safety protocols followed correctly"
-        elif score >= 0.70:
-            return "Good preparation with minor gaps in completeness or sequencing"
-        elif score >= 0.50:
-            return "Adequate preparation but missing some critical safety steps"
-        else:
-            return "Preparation needs significant improvement - major safety concerns present"
+        # No final scoring for this step
+        return "Real-time feedback provided during preparation"
     
     else:
         return "Performance assessment complete"
-    

@@ -7,6 +7,7 @@ from app.services.evaluation_service import EvaluationService
 from app.core.coordinator import Coordinator
 from app.core.state_machine import Step
 from app.services.action_event_service import ActionEventService
+from app.rag.retriever import retrieve_with_rag
 
 from app.agents.patient_agent import PatientAgent
 from app.agents.communication_agent import CommunicationAgent
@@ -196,12 +197,19 @@ async def ask_staff_nurse(payload: StaffNurseInput):
 
 
 @router.post("/action")
-def record_action(payload: ActionInput):
+async def record_action(payload: ActionInput):
     """
-    Record a preparation action with REAL-TIME FEEDBACK.
+    Record a preparation action with REAL-TIME FEEDBACK using RAG guidelines.
     
-    For CLEANING_AND_DRESSING step, provides immediate feedback on each action.
-    Actions are accumulated and evaluated when step completes.
+    For CLEANING_AND_DRESSING step:
+    1. Records the action
+    2. Retrieves RAG guidelines for this step
+    3. Provides immediate, contextual feedback based on:
+       - What actions have been completed
+       - What the current action is
+       - What prerequisites might be missing
+    
+    Returns actionable real-time feedback to guide the student.
     """
     session = session_manager.get_session(payload.session_id)
     if not session:
@@ -216,7 +224,25 @@ def record_action(payload: ActionInput):
             detail=f"Actions not allowed in {current_step} step"
         )
     
-    # Record the action
+    # Get current action events BEFORE recording this one
+    performed_actions = session.get("action_events", [])
+    
+    # Retrieve RAG guidelines for real-time evaluation
+    rag_result = await retrieve_with_rag(
+        query="wound cleaning and dressing preparation steps sequence prerequisites required actions",
+        scenario_id=session["scenario_id"]
+    )
+    
+    rag_guidelines = rag_result.get("text", "")
+    
+    # Get real-time feedback BEFORE recording (to check prerequisites)
+    real_time_feedback = await clinical_agent.get_real_time_feedback(
+        action_type=payload.action_type,
+        performed_actions=performed_actions,
+        rag_guidelines=rag_guidelines
+    )
+    
+    # Record the action (regardless of feedback - no blocking)
     result = action_event_service.record_action(
         session_id=payload.session_id,
         action_type=payload.action_type,
@@ -224,24 +250,29 @@ def record_action(payload: ActionInput):
         metadata=payload.metadata
     )
     
-    # NEW: Get real-time feedback for this action
-    performed_actions = [
-        event["action_type"] 
-        for event in session.get("action_events", [])
-    ]
+    # Print to terminal for debugging (agent-level feedback)
+    print("\n" + "="*60)
+    print(f"REAL-TIME FEEDBACK - Action: {payload.action_type}")
+    print("="*60)
+    print(f"Status: {real_time_feedback.get('status')}")
+    print(f"Message: {real_time_feedback.get('message')}")
+    if real_time_feedback.get('missing_actions'):
+        print(f"Missing Prerequisites: {real_time_feedback.get('missing_actions')}")
+    print(f"Can Proceed: {real_time_feedback.get('can_proceed')}")
+    print(f"Total Actions: {real_time_feedback.get('total_actions_so_far')}")
+    print("="*60 + "\n")
     
-    real_time_feedback = clinical_agent.get_real_time_feedback(
-        action_type=payload.action_type,
-        performed_actions=performed_actions
-    )
-    
+    # Return simplified feedback to student (what they see in UI)
     return {
         "action_recorded": True,
         "action_type": payload.action_type,
         "step": current_step,
         "timestamp": result.get("timestamp"),
-        "total_actions": len(session.get("action_events", [])),
-        "real_time_feedback": real_time_feedback  # NEW: Immediate feedback
+        "feedback": {
+            "message": real_time_feedback.get("message"),
+            "status": real_time_feedback.get("status"),
+            "can_proceed": real_time_feedback.get("can_proceed")
+        }
     }
 
 
@@ -278,11 +309,18 @@ def answer_mcq_question(payload: MCQAnswerInput):
         session["mcq_answers"] = {}
     session["mcq_answers"][payload.question_id] = payload.answer
     
+    # Print to terminal for debugging
+    print("\n" + "="*60)
+    print(f"MCQ ANSWER - Question: {payload.question_id}")
+    print("="*60)
+    print(f"Question: {question.get('question')}")
+    print(f"Student Answer: {payload.answer}")
+    print(f"Correct Answer: {correct_answer}")
+    print(f"Result: {'✓ CORRECT' if is_correct else '✗ INCORRECT'}")
+    print("="*60 + "\n")
+    
     return {
         "question_id": payload.question_id,
-        "question": question.get("question"),
-        "student_answer": payload.answer,
-        "correct_answer": correct_answer,
         "is_correct": is_correct,
         "explanation": question.get("explanation", "No explanation provided."),
         "status": "correct" if is_correct else "incorrect"
@@ -292,11 +330,16 @@ def answer_mcq_question(payload: MCQAnswerInput):
 @router.post("/step")
 async def run_step(payload: StepInput):
     """
-    Unified step handler with CLEANING_AND_DRESSING step support.
+    Complete current step and get comprehensive feedback.
     
-    Handles step completion and evaluation for all steps.
-    
-    CLEANING_AND_DRESSING step uses ClinicalAgent for evaluation.
+    Flow:
+    1. Run evaluator agents (except for CLEANING_AND_DRESSING - real-time only)
+    2. Aggregate evaluations into scores + raw feedback
+    3. Generate narrated feedback paragraph
+    4. Return BOTH to client:
+       - narrated_feedback + score (for student UI)
+       - agent_feedback (printed to terminal for debugging)
+    5. Advance to next step
     """
     session = session_manager.get_session(payload.session_id)
     if not session:
@@ -311,19 +354,18 @@ async def run_step(payload: StepInput):
         )
 
     # ---------------------------------------------
-    # Prepare evaluation context
-    # ---------------------------------------------
-    context = await evaluation_service.prepare_agent_context(
-        session_id=payload.session_id,
-        step=current_step
-    )
-
-    evaluator_outputs = []
-
-    # ---------------------------------------------
     # Step-specific evaluation
     # ---------------------------------------------
+    evaluator_outputs = []
+
     if current_step == Step.HISTORY.value:
+        # Prepare evaluation context
+        context = await evaluation_service.prepare_agent_context(
+            session_id=payload.session_id,
+            step=current_step
+        )
+        
+        # Run both communication and knowledge agents
         evaluator_outputs.append(
             await communication_agent.evaluate(
                 current_step=current_step,
@@ -346,15 +388,25 @@ async def run_step(payload: StepInput):
         pass
 
     elif current_step == Step.CLEANING_AND_DRESSING.value:
-        # CLEANING_AND_DRESSING step evaluation with ClinicalAgent
-        evaluator_outputs.append(
-            await clinical_agent.evaluate(
-                current_step=current_step,
-                student_input=str(context["action_events"]),
-                scenario_metadata=context["scenario_metadata"],
-                rag_response=context["rag_context"]
-            )
-        )
+        # NO FINAL EVALUATION for this step
+        # Real-time feedback was sufficient
+        pass
+
+    # ---------------------------------------------
+    # Print agent feedback to terminal (for debugging)
+    # Only if we have evaluator outputs
+    # ---------------------------------------------
+    if evaluator_outputs:
+        print("\n" + "="*80)
+        print(f"AGENT EVALUATIONS - Step: {current_step}")
+        print("="*80)
+        for ev in evaluator_outputs:
+            print(f"\n--- {ev.agent_name} ---")
+            print(f"Verdict: {ev.verdict} (Confidence: {ev.confidence})")
+            print(f"Strengths: {ev.strengths}")
+            print(f"Issues: {ev.issues_detected}")
+            print(f"Explanation: {ev.explanation}")
+        print("="*80 + "\n")
 
     # ---------------------------------------------
     # Aggregate + narrate feedback
@@ -370,6 +422,24 @@ async def run_step(payload: StepInput):
         student_mcq_answers=mcq_answers,
         student_message_to_nurse=payload.user_input
     )
+
+    # ---------------------------------------------
+    # Print final scores to terminal (for debugging)
+    # Only if we have scores
+    # ---------------------------------------------
+    if evaluation.get('scores'):
+        print("\n" + "="*80)
+        print(f"FINAL EVALUATION SCORES - Step: {current_step}")
+        print("="*80)
+        print(f"Step Quality Indicator: {evaluation.get('scores', {}).get('step_quality_indicator')}")
+        print(f"Interpretation: {evaluation.get('scores', {}).get('interpretation')}")
+        print(f"Agent Scores: {evaluation.get('scores', {}).get('agent_scores')}")
+        if evaluation.get('mcq_result'):
+            mcq = evaluation['mcq_result']
+            print(f"\nMCQ Results:")
+            print(f"  Correct: {mcq.get('correct_count')}/{mcq.get('total_questions')}")
+            print(f"  Score: {mcq.get('score')}")
+        print("="*80 + "\n")
 
     # ---------------------------------------------
     # Cleanup: Clear step-specific data after evaluation
@@ -393,9 +463,31 @@ async def run_step(payload: StepInput):
     # ---------------------------------------------
     next_step = session_manager.advance_step(payload.session_id)
 
+    # ---------------------------------------------
+    # Return STUDENT-FACING feedback only
+    # Agent feedback was printed to terminal
+    # ---------------------------------------------
+    
+    # For CLEANING_AND_DRESSING step, no final feedback
+    if current_step == Step.CLEANING_AND_DRESSING.value:
+        return {
+            "session_id": payload.session_id,
+            "current_step": current_step,
+            "next_step": next_step,
+            "feedback": {
+                "message": "Step completed. Real-time feedback was provided during actions."
+            }
+        }
+    
+    # For other steps, provide narrated feedback + score
     return {
         "session_id": payload.session_id,
         "current_step": current_step,
         "next_step": next_step,
-        "evaluation": evaluation
+        "feedback": {
+            "narrated_feedback": evaluation.get("narrated_feedback"),
+            "score": evaluation.get("scores", {}).get("step_quality_indicator"),
+            "interpretation": evaluation.get("scores", {}).get("interpretation")
+        },
+        "mcq_result": evaluation.get("mcq_result")  # Only for ASSESSMENT step
     }
