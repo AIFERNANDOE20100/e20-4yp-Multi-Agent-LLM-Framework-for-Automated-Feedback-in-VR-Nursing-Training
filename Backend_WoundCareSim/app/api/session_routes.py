@@ -82,6 +82,14 @@ class ActionInput(BaseModel):
     metadata: Optional[Dict[str, Any]] = None
 
 
+class VerifyMaterialInput(BaseModel):
+    session_id: str
+    material_type: str  # "solution" or "dressing"
+    material_name: str
+    expiry_date: str
+    package_condition: str  # "intact", "damaged", etc.
+
+
 # -------------------------------------------------
 # Routes
 # -------------------------------------------------
@@ -168,6 +176,9 @@ async def ask_staff_nurse(payload: StaffNurseInput):
     
     The staff nurse provides high-level guidance only.
     Does not evaluate, approve, or block the student.
+    
+    NOTE: For material verification during cleaning_and_dressing step,
+    use the /verify-material endpoint instead to ensure verification is tracked as an action.
     """
     session = session_manager.get_session(payload.session_id)
     if not session:
@@ -196,6 +207,110 @@ async def ask_staff_nurse(payload: StaffNurseInput):
     }
 
 
+@router.post("/verify-material")
+async def verify_material(payload: VerifyMaterialInput):
+    """
+    Student requests staff nurse to verify cleaning solution or dressing packet.
+    
+    This is an ACTION endpoint (not just conversation).
+    Records the verification action AND provides nurse verbal feedback.
+    
+    Use this endpoint instead of /staff-nurse for verification to ensure
+    the action is properly tracked for evaluation.
+    
+    Args:
+        material_type: "solution" or "dressing"
+        material_name: What the student identifies it as
+        expiry_date: Date stated by student
+        package_condition: "intact", "damaged", etc.
+    
+    Returns:
+        - Nurse's verbal verification response
+        - Action recorded confirmation
+        - Real-time feedback
+    """
+    session = session_manager.get_session(payload.session_id)
+    if not session:
+        raise HTTPException(status_code=404, detail="Session not found")
+    
+    current_step = session["current_step"]
+    
+    # Only allow verification during CLEANING_AND_DRESSING step
+    if current_step != Step.CLEANING_AND_DRESSING.value:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Material verification only allowed during cleaning_and_dressing step"
+        )
+    
+    # Generate nurse verbal response
+    staff_nurse = StaffNurseAgent()
+    nurse_response = await staff_nurse.verify_material(
+        material_type=payload.material_type,
+        material_name=payload.material_name,
+        expiry_date=payload.expiry_date,
+        package_condition=payload.package_condition
+    )
+    
+    # Record as action with metadata
+    action_type = f"action_verify_{payload.material_type}"
+    
+    # Get current action events BEFORE recording this one (for real-time feedback)
+    performed_actions = session.get("action_events", [])
+    
+    # Retrieve RAG guidelines for real-time evaluation
+    rag_result = await retrieve_with_rag(
+        query="wound cleaning and dressing preparation steps sequence prerequisites verification",
+        scenario_id=session["scenario_id"]
+    )
+    
+    rag_guidelines = rag_result.get("text", "")
+    
+    # Get real-time feedback
+    real_time_feedback = await clinical_agent.get_real_time_feedback(
+        action_type=action_type,
+        performed_actions=performed_actions,
+        rag_guidelines=rag_guidelines
+    )
+    
+    # Record the verification action
+    result = action_event_service.record_action(
+        session_id=payload.session_id,
+        action_type=action_type,
+        step=current_step,
+        metadata={
+            "material_type": payload.material_type,
+            "material_name": payload.material_name,
+            "expiry_date": payload.expiry_date,
+            "package_condition": payload.package_condition,
+            "nurse_approval": nurse_response
+        }
+    )
+    
+    # Print to terminal for debugging
+    print("\n" + "="*60)
+    print(f"MATERIAL VERIFICATION - Type: {payload.material_type}")
+    print("="*60)
+    print(f"Material: {payload.material_name}")
+    print(f"Expiry: {payload.expiry_date}")
+    print(f"Condition: {payload.package_condition}")
+    print(f"Nurse Response: {nurse_response}")
+    print(f"Feedback Status: {real_time_feedback.get('status')}")
+    print(f"Feedback Message: {real_time_feedback.get('message')}")
+    print("="*60 + "\n")
+    
+    return {
+        "nurse_response": nurse_response,
+        "action_recorded": True,
+        "action_type": action_type,
+        "timestamp": result.get("timestamp"),
+        "feedback": {
+            "message": real_time_feedback.get("message"),
+            "status": real_time_feedback.get("status"),
+            "can_proceed": real_time_feedback.get("can_proceed")
+        }
+    }
+
+
 @router.post("/action")
 async def record_action(payload: ActionInput):
     """
@@ -207,9 +322,12 @@ async def record_action(payload: ActionInput):
     3. Provides immediate, contextual feedback based on:
        - What actions have been completed
        - What the current action is
-       - What prerequisites might be missing
+       - What prerequisites might be missing (ALL of them, not just previous)
     
     Returns actionable real-time feedback to guide the student.
+    
+    NOTE: For verification actions (verify solution/dressing), 
+    use /verify-material endpoint instead.
     """
     session = session_manager.get_session(payload.session_id)
     if not session:
@@ -271,7 +389,8 @@ async def record_action(payload: ActionInput):
         "feedback": {
             "message": real_time_feedback.get("message"),
             "status": real_time_feedback.get("status"),
-            "can_proceed": real_time_feedback.get("can_proceed")
+            "can_proceed": real_time_feedback.get("can_proceed"),
+            "missing_actions": real_time_feedback.get("missing_actions", [])
         }
     }
 
@@ -333,11 +452,13 @@ async def run_step(payload: StepInput):
     Complete current step and get comprehensive feedback.
     
     Flow:
-    1. Run evaluator agents (except for CLEANING_AND_DRESSING - real-time only)
+    1. Run evaluator agents (only for HISTORY step)
     2. Aggregate evaluations into scores + raw feedback
-    3. Generate narrated feedback paragraph
+    3. Generate narrated feedback paragraph (only for HISTORY step)
     4. Return BOTH to client:
-       - narrated_feedback + score (for student UI)
+       - HISTORY: narrated_feedback + score (for student UI)
+       - ASSESSMENT: mcq_result only (no narration)
+       - CLEANING_AND_DRESSING: summary only (no evaluation)
        - agent_feedback (printed to terminal for debugging)
     5. Advance to next step
     """
@@ -434,11 +555,16 @@ async def run_step(payload: StepInput):
         print(f"Step Quality Indicator: {evaluation.get('scores', {}).get('step_quality_indicator')}")
         print(f"Interpretation: {evaluation.get('scores', {}).get('interpretation')}")
         print(f"Agent Scores: {evaluation.get('scores', {}).get('agent_scores')}")
-        if evaluation.get('mcq_result'):
-            mcq = evaluation['mcq_result']
-            print(f"\nMCQ Results:")
-            print(f"  Correct: {mcq.get('correct_count')}/{mcq.get('total_questions')}")
-            print(f"  Score: {mcq.get('score')}")
+        print("="*80 + "\n")
+    
+    if evaluation.get('mcq_result'):
+        mcq = evaluation['mcq_result']
+        print("\n" + "="*80)
+        print(f"MCQ RESULTS - Step: {current_step}")
+        print("="*80)
+        print(f"Correct: {mcq.get('correct_count')}/{mcq.get('total_questions')}")
+        print(f"Score: {mcq.get('score')}")
+        print(f"Summary: {mcq.get('summary')}")
         print("="*80 + "\n")
 
     # ---------------------------------------------
@@ -468,18 +594,30 @@ async def run_step(payload: StepInput):
     # Agent feedback was printed to terminal
     # ---------------------------------------------
     
-    # For CLEANING_AND_DRESSING step, no final feedback
+    # For CLEANING_AND_DRESSING step, provide summary
     if current_step == Step.CLEANING_AND_DRESSING.value:
+        completed_count = len(session.get("action_events", []))
         return {
             "session_id": payload.session_id,
             "current_step": current_step,
             "next_step": next_step,
-            "feedback": {
-                "message": "Step completed. Real-time feedback was provided during actions."
+            "summary": {
+                "message": "Preparation step completed. Review real-time feedback for details.",
+                "actions_completed": completed_count,
+                "expected_actions": 9
             }
         }
     
-    # For other steps, provide narrated feedback + score
+    # For ASSESSMENT step, only return MCQ results (no narration)
+    if current_step == Step.ASSESSMENT.value:
+        return {
+            "session_id": payload.session_id,
+            "current_step": current_step,
+            "next_step": next_step,
+            "mcq_result": evaluation.get("mcq_result")
+        }
+    
+    # For HISTORY step, provide narrated feedback + score
     return {
         "session_id": payload.session_id,
         "current_step": current_step,
@@ -488,6 +626,5 @@ async def run_step(payload: StepInput):
             "narrated_feedback": evaluation.get("narrated_feedback"),
             "score": evaluation.get("scores", {}).get("step_quality_indicator"),
             "interpretation": evaluation.get("scores", {}).get("interpretation")
-        },
-        "mcq_result": evaluation.get("mcq_result")  # Only for ASSESSMENT step
+        }
     }

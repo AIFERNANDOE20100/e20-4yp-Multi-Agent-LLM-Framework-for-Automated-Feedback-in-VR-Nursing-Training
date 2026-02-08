@@ -26,9 +26,11 @@ class ClinicalAgent(BaseAgent):
         """
         Provides immediate feedback when an action is performed.
         
+        ENHANCED: Reports ALL missing prerequisite actions, not just the immediate one.
+        
         Uses RAG guidelines to determine if:
         1. This action is appropriate at this point
-        2. Any prerequisite actions are missing
+        2. ANY prerequisite actions are missing (comprehensive check)
         3. This action completes correctly
         
         Returns simple, actionable feedback for the student.
@@ -50,20 +52,25 @@ class ClinicalAgent(BaseAgent):
             f"{rag_guidelines}\n\n"
             "EVALUATION FOCUS:\n"
             "1. Is this action appropriate at this point in the sequence?\n"
-            "2. Are there any missing prerequisite actions?\n"
-            "3. What should the student do next (if anything is missing)?\n\n"
+            "2. Identify ALL missing prerequisite actions (not just the immediate previous one)\n"
+            "3. What should the student do to correct the sequence?\n\n"
+            "CRITICAL INSTRUCTION - COMPREHENSIVE PREREQUISITE CHECK:\n"
+            "- If the student skips multiple actions (e.g., does Action 1, then jumps to Action 5)\n"
+            "- You MUST list ALL missing actions (Actions 2, 3, 4)\n"
+            "- Do NOT only mention the immediate previous action\n"
+            "- This ensures the student understands ALL gaps in their procedure\n\n"
             "RESPONSE RULES:\n"
-            "- Keep feedback SHORT and ACTIONABLE (1-2 sentences)\n"
+            "- Keep feedback SHORT and ACTIONABLE (2-3 sentences)\n"
             "- If action is correct: Acknowledge positively\n"
-            "- If prerequisites missing: State what's missing clearly\n"
+            "- If prerequisites missing: List ALL missing actions clearly\n"
             "- Do NOT lecture or explain in detail\n"
             "- Do NOT mention the next step after this one\n"
-            "- Focus only on the current action and immediate prerequisites\n\n"
+            "- Focus on what's been skipped and what needs to be done\n\n"
             "You MUST respond with valid JSON:\n"
             "{\n"
             '  "status": "complete" | "missing_prerequisites",\n'
-            '  "message": "Brief feedback message",\n'
-            '  "missing_actions": ["action1", "action2"] or [],\n'
+            '  "message": "Brief feedback message listing ALL missing actions if applicable",\n'
+            '  "missing_actions": ["action1", "action2", "action3"] or [],\n'
             '  "can_proceed": true | false\n'
             "}\n"
         )
@@ -75,8 +82,10 @@ class ClinicalAgent(BaseAgent):
             f"CURRENT ACTION BEING PERFORMED:\n{current_action_name}\n\n"
             "Based on the reference guidelines:\n"
             "1. Is this action appropriate now?\n"
-            "2. What prerequisites (if any) are missing?\n"
-            "3. Should the student do something else first?\n\n"
+            "2. List ALL prerequisite actions that should have been completed before this action\n"
+            "3. Which of those prerequisite actions are missing from the completed actions?\n"
+            "4. What should the student do to correct the sequence?\n\n"
+            "IMPORTANT: If multiple actions were skipped, list ALL of them in missing_actions array.\n\n"
             "Provide real-time feedback in JSON format."
         )
         
@@ -93,6 +102,14 @@ class ClinicalAgent(BaseAgent):
             # Add metadata
             feedback["action_type"] = action_type
             feedback["total_actions_so_far"] = len(performed_actions) + 1
+            
+            # Enhanced message formatting if multiple actions are missing
+            if feedback.get("missing_actions") and len(feedback["missing_actions"]) > 1:
+                missing_names = [self._format_action_name(act) for act in feedback["missing_actions"]]
+                feedback["message"] = (
+                    f"You skipped multiple steps. Please complete: {', '.join(missing_names)}. "
+                    f"{feedback.get('message', '')}"
+                )
             
             return feedback
             

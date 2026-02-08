@@ -20,12 +20,14 @@ class EvaluationService:
     Key responsibilities:
     1. Run evaluator agents (Communication, Knowledge for HISTORY; None for CLEANING_AND_DRESSING)
     2. Aggregate into scores (via Coordinator) 
-    3. Generate narrated feedback paragraph (via FeedbackNarrator)
+    3. Generate narrated feedback paragraph (via FeedbackNarrator) - NOT for ASSESSMENT
     4. Return student-facing feedback + debugging data
     
     NO blocking, NO enforcement - purely formative feedback
     
-    NOTE: CLEANING_AND_DRESSING step gets NO final evaluation (real-time feedback only)
+    NOTE: 
+    - ASSESSMENT step gets NO narration (MCQ explanations are sufficient)
+    - CLEANING_AND_DRESSING step gets NO final evaluation (real-time feedback only)
     """
 
     def __init__(
@@ -113,12 +115,14 @@ class EvaluationService:
         Aggregate evaluations and generate student-facing feedback.
         
         Returns:
-        - scores: Numeric indicators (for reporting/display) - ONLY for HISTORY and ASSESSMENT
-        - narrated_feedback: Single paragraph for student - ONLY for HISTORY and ASSESSMENT
-        - mcq_result: MCQ evaluation (ASSESSMENT step only)
+        - scores: Numeric indicators (for reporting/display) - ONLY for HISTORY
+        - narrated_feedback: Single paragraph for student - ONLY for HISTORY
+        - mcq_result: MCQ evaluation (ASSESSMENT step only, NO narration)
         - raw_feedback: Agent breakdowns (for terminal debugging)
         
-        NOTE: For CLEANING_AND_DRESSING, returns minimal data (no scores, no narration)
+        NOTE: 
+        - For ASSESSMENT: Only MCQ results, NO narration
+        - For CLEANING_AND_DRESSING: Returns minimal data (no scores, no narration)
         """
 
         session = self.session_manager.get_session(session_id)
@@ -146,17 +150,8 @@ class EvaluationService:
             return payload
 
         # ------------------------------------------------
-        # HISTORY and ASSESSMENT: Normal evaluation
+        # ASSESSMENT: MCQ only, NO narration
         # ------------------------------------------------
-        
-        # ---- Coordinator aggregation (numeric scores) ----
-        coordinator_output = self.coordinator.aggregate(
-            evaluations=evaluator_outputs,
-            current_step=current_step.value
-        )
-
-        # ---- MCQ handling (ASSESSMENT only) ----
-        mcq_result = None
         if current_step == Step.ASSESSMENT:
             questions = session["scenario_metadata"].get(
                 "assessment_questions", []
@@ -194,7 +189,30 @@ class EvaluationService:
                     assessment_questions=questions
                 )
 
-            coordinator_output["mcq_result"] = mcq_result
+            payload = {
+                "step": current_step.value,
+                "mcq_result": mcq_result,
+                "scores": None,  # No agent scores for MCQ step
+                "narrated_feedback": None,  # NO NARRATION for assessment
+                "raw_feedback": [],  # No agent feedback
+            }
+            
+            self.session_manager.store_last_evaluation(
+                session_id=session_id,
+                evaluation=payload
+            )
+            
+            return payload
+
+        # ------------------------------------------------
+        # HISTORY: Normal evaluation with narration
+        # ------------------------------------------------
+        
+        # ---- Coordinator aggregation (numeric scores) ----
+        coordinator_output = self.coordinator.aggregate(
+            evaluations=evaluator_outputs,
+            current_step=current_step.value
+        )
 
         # ------------------------------------------------
         # Build RAW feedback from evaluator agents
@@ -256,7 +274,7 @@ class EvaluationService:
                 }
 
         # ------------------------------------------------
-        # Final payload
+        # Final payload for HISTORY step
         # ------------------------------------------------
         payload = {
             "step": current_step.value,
@@ -264,9 +282,6 @@ class EvaluationService:
             "narrated_feedback": narrated_feedback_dict,  # Student sees this
             "raw_feedback": raw_feedback_items,  # Debugging only
         }
-
-        if mcq_result is not None:
-            payload["mcq_result"] = mcq_result
 
         # Store for session history
         self.session_manager.store_last_evaluation(

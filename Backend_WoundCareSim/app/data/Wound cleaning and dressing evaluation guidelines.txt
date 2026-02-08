@@ -23,32 +23,39 @@ Action 1: Initial Hand Hygiene
 - Wash hands according to infection control guidelines
 - Purpose: Prevents contamination before touching equipment
 - CRITICAL: Must be done BEFORE any equipment contact
+- Prerequisites: None (first action)
 
 Action 2: Clean the Dressing Trolley
 - Clean and disinfect the trolley surface
 - Ensure surface is visibly clean and dry
 - Purpose: Removes environmental contaminants
+- Prerequisites: Action 1 (Initial Hand Hygiene)
 
 Action 3: Hand Hygiene After Trolley Cleaning
 - Wash hands again after trolley cleaning
 - Purpose: Prevents re-contamination after contact with cleaning surfaces
 - CRITICAL: Hand hygiene is required AFTER cleaning tasks
+- Prerequisites: Actions 1, 2
 
 Action 4: Select Prescribed Cleaning Solution
 - Take the prescribed cleaning solution (surgical spirit)
 - Purpose: Ensures correct solution per medical orders
+- Prerequisites: Actions 1, 2, 3
 
 Action 5: Verify Cleaning Solution with Staff Nurse (MANDATORY)
 - Check solution name
 - Check expiration date
+- Check bottle integrity
 - Verbally confirm with staff nurse
 - Purpose: Prevents medication errors
 - CRITICAL: Cannot proceed without staff nurse verification
+- Prerequisites: Actions 1, 2, 3, 4
 
 Action 6: Select Dressing Materials
 - Take required dressing materials
 - Ensure dressing type matches prescription (dry dressing)
 - Purpose: Ensures appropriate materials prepared
+- Prerequisites: Actions 1, 2, 3, 4, 5
 
 Action 7: Verify Sterile Dressing Packet with Staff Nurse (MANDATORY)
 - Check packet integrity (no tears, no moisture)
@@ -56,16 +63,68 @@ Action 7: Verify Sterile Dressing Packet with Staff Nurse (MANDATORY)
 - Verbally confirm sterility with staff nurse
 - Purpose: Maintains aseptic technique
 - CRITICAL: Cannot proceed without staff nurse verification
+- Prerequisites: Actions 1, 2, 3, 4, 5, 6
 
 Action 8: Arrange Solutions and Materials on Trolley
 - Place verified items neatly on trolley
 - Organize for efficient workflow
 - Purpose: Ensures organized, efficient setup
+- Prerequisites: Actions 1, 2, 3, 4, 5, 6, 7
 
 Action 9: Bring Prepared Trolley to Patient Area
 - Transport prepared trolley to bedside/treatment area
 - Purpose: Marks completion of preparation
 - CRITICAL: Final action confirming readiness
+- Prerequisites: Actions 1, 2, 3, 4, 5, 6, 7, 8
+
+PREREQUISITE MAPPING FOR REAL-TIME FEEDBACK
+
+When evaluating if a student can perform an action, check ALL prerequisites:
+
+Action 1: Initial Hand Hygiene
+  Required before: None (this is the first action)
+  
+Action 2: Clean the Dressing Trolley
+  Required before: Initial Hand Hygiene (Action 1)
+  
+Action 3: Hand Hygiene After Trolley Cleaning
+  Required before: Initial Hand Hygiene (Action 1), Clean Trolley (Action 2)
+  
+Action 4: Select Prescribed Cleaning Solution
+  Required before: Actions 1, 2, 3
+  
+Action 5: Verify Cleaning Solution with Staff Nurse
+  Required before: Actions 1, 2, 3, 4
+  Missing any of 1-4 means verification cannot be properly completed
+  
+Action 6: Select Dressing Materials
+  Required before: Actions 1, 2, 3, 4, 5
+  
+Action 7: Verify Sterile Dressing Packet with Staff Nurse
+  Required before: Actions 1, 2, 3, 4, 5, 6
+  Missing any of 1-6 means verification cannot be properly completed
+  
+Action 8: Arrange Solutions and Materials on Trolley
+  Required before: Actions 1, 2, 3, 4, 5, 6, 7
+  Cannot arrange materials that haven't been selected and verified
+  
+Action 9: Bring Prepared Trolley to Patient Area
+  Required before: ALL previous actions (1-8)
+  This is the final action and requires complete preparation
+
+REAL-TIME FEEDBACK EXAMPLES
+
+Example 1: Student does Action 1, then jumps to Action 5
+Missing: Actions 2, 3, 4
+Feedback: "Before verifying the cleaning solution, you must: clean the trolley (Action 2), perform hand hygiene after cleaning (Action 3), and select the cleaning solution (Action 4)."
+
+Example 2: Student does Actions 1, 2, then jumps to Action 7
+Missing: Actions 3, 4, 5, 6
+Feedback: "Before verifying the dressing packet, you must: perform hand hygiene after trolley cleaning (Action 3), select cleaning solution (Action 4), verify solution with nurse (Action 5), and select dressing materials (Action 6)."
+
+Example 3: Student does Actions 1-7 correctly in sequence, then performs Action 8
+Missing: None
+Feedback: "Good! You've completed all prerequisite steps. Arranging materials on the trolley now is appropriate."
 
 ACTIONS NOT INCLUDED IN THIS STEP
 - Actual wound cleaning
@@ -89,6 +148,7 @@ CRITICAL SEQUENCE VIOLATIONS:
 - Skipping hand hygiene after trolley cleaning
 - Not verifying solutions/materials with staff nurse
 - Bringing trolley to patient before completing preparation
+- Performing any action without completing its prerequisites
 
 PATIENT SAFETY PRIORITIES:
 1. Infection control (hand hygiene compliance)
@@ -102,15 +162,17 @@ COMMON ERRORS TO DETECT:
 - Incorrect solution selection
 - Using expired materials
 - Wrong dressing type
-- Improper sequencing
+- Improper sequencing (jumping ahead without prerequisites)
 - Incomplete preparation before bringing trolley
 
 FEEDBACK PRINCIPLES:
-- Real-time feedback when critical actions are missed
-- Final feedback summarizes overall preparation quality
+- Real-time feedback when ANY prerequisite is missing
+- List ALL missing prerequisites, not just the immediate previous action
+- Non-blocking - student can continue but must understand gaps
 - Formative approach focusing on learning
 - Emphasizes patient safety implications
 
 EDUCATIONAL FOCUS:
 This step teaches that errors during preparation can compromise patient safety
 even before wound care begins. Safe preparation is a patient-safety responsibility.
+Every prerequisite exists for a reason - skipping any step creates risk.
