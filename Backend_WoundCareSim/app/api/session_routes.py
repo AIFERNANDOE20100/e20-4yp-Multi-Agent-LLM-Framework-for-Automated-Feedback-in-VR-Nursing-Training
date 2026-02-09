@@ -17,6 +17,7 @@ from app.agents.staff_nurse_agent import StaffNurseAgent
 from app.agents.feedback_narrator_agent import FeedbackNarratorAgent
 
 from app.utils.mcq_evaluator import MCQEvaluator
+from app.services.groq_audio_service import GroqAudioService
 
 router = APIRouter(prefix="/session", tags=["Session"])
 
@@ -43,6 +44,7 @@ communication_agent = CommunicationAgent()
 knowledge_agent = KnowledgeAgent()
 clinical_agent = ClinicalAgent()
 mcq_evaluator = MCQEvaluator()
+audio_service = GroqAudioService()
 
 # -------------------------------------------------
 # Request models
@@ -99,6 +101,19 @@ def is_action_already_performed(session: dict, action_type: str) -> bool:
     """
     action_events = session.get("action_events", [])
     return any(event["action_type"] == action_type for event in action_events)
+
+
+async def _safe_tts(text: str) -> Optional[Dict[str, Any]]:
+    """
+    Convert text to speech without breaking request flow.
+    """
+    if not text:
+        return None
+    try:
+        return await audio_service.text_to_speech(text=text)
+    except Exception as exc:
+        print(f"⚠️  TTS failed: {exc}")
+        return None
 
 
 # -------------------------------------------------
@@ -177,7 +192,9 @@ async def send_message(payload: MessageInput):
         response
     )
 
-    return {"patient_response": response}
+    patient_audio = await _safe_tts(response)
+
+    return {"patient_response": response, "patient_audio": patient_audio}
 
 
 @router.post("/staff-nurse")
@@ -228,11 +245,16 @@ async def ask_staff_nurse(payload: StaffNurseInput):
         current_step=current_step,
         next_step=next_step_str
     )
+
+    staff_nurse_audio = None
+    if current_step == Step.HISTORY.value:
+        staff_nurse_audio = await _safe_tts(response)
     
     return {
         "staff_nurse_response": response,
         "current_step": current_step,
-        "is_verification": False
+        "is_verification": False,
+        "staff_nurse_audio": staff_nurse_audio
     }
 
 
@@ -723,5 +745,8 @@ async def run_step(payload: StepInput):
             "narrated_feedback": evaluation.get("narrated_feedback"),
             "score": evaluation.get("scores", {}).get("step_quality_indicator"),
             "interpretation": evaluation.get("scores", {}).get("interpretation")
-        }
+        },
+        "feedback_audio": await _safe_tts(
+            (evaluation.get("narrated_feedback") or {}).get("message_text", "")
+        )
     }

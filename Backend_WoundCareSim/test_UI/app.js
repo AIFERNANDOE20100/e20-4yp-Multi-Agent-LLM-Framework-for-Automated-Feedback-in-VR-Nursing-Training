@@ -12,6 +12,11 @@ let currentSession = {
     actionCounter: 0
 };
 
+let mediaRecorder = null;
+let recordedChunks = [];
+let isRecording = false;
+let mediaStream = null;
+
 // ==========================================
 // Utility Functions
 // ==========================================
@@ -41,6 +46,29 @@ function handleEnter(event, callback) {
     if (event.key === 'Enter') {
         callback();
     }
+}
+
+function updateRecordingUI(recording) {
+    const recordButton = document.getElementById('recordButton');
+    const status = document.getElementById('recordingStatus');
+    if (!recordButton || !status) return;
+    if (recording) {
+        recordButton.classList.add('recording');
+        recordButton.textContent = '⏹️ Stop Recording';
+        status.textContent = 'Recording...';
+    } else {
+        recordButton.classList.remove('recording');
+        recordButton.textContent = '🎤 Record Voice';
+        status.textContent = 'Not recording';
+    }
+}
+
+function playAudioFromBase64(audioBase64, contentType = 'audio/mpeg') {
+    if (!audioBase64) return;
+    const audio = new Audio(`data:${contentType};base64,${audioBase64}`);
+    audio.play().catch(error => {
+        console.error('Audio playback failed:', error);
+    });
 }
 
 async function apiCall(endpoint, method = 'GET', body = null) {
@@ -138,18 +166,21 @@ function showHistoryStep() {
     // Clear conversation box
     const conversationBox = document.getElementById('conversationBox');
     conversationBox.innerHTML = '<div class="conversation-empty">Start by asking the patient a question...</div>';
+
+    const transcriptInput = document.getElementById('patientQuestion');
+    if (transcriptInput) {
+        transcriptInput.value = '';
+    }
 }
 
-async function sendMessage() {
-    const input = document.getElementById('patientQuestion');
-    const message = input.value.trim();
-    
-    if (!message) return;
-    
+async function sendMessageText(message) {
+    if (!message) {
+        return;
+    }
+
     try {
         // Add student message to UI
         addMessageToConversation('student', message);
-        input.value = '';
         
         // Send to backend
         const response = await apiCall('/session/message', 'POST', {
@@ -159,9 +190,88 @@ async function sendMessage() {
         
         // Add patient response
         addMessageToConversation('patient', response.patient_response);
+
+        if (response.patient_audio && response.patient_audio.audio_base64) {
+            playAudioFromBase64(
+                response.patient_audio.audio_base64,
+                response.patient_audio.content_type
+            );
+        }
         
     } catch (error) {
         console.error('Failed to send message:', error);
+    }
+}
+
+async function toggleRecording() {
+    if (isRecording) {
+        stopRecording();
+    } else {
+        await startRecording();
+    }
+}
+
+async function startRecording() {
+    try {
+        mediaStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+        recordedChunks = [];
+        mediaRecorder = new MediaRecorder(mediaStream);
+        mediaRecorder.ondataavailable = (event) => {
+            if (event.data.size > 0) {
+                recordedChunks.push(event.data);
+            }
+        };
+        mediaRecorder.onstop = async () => {
+            const blob = new Blob(recordedChunks, { type: mediaRecorder.mimeType || 'audio/webm' });
+            recordedChunks = [];
+            if (mediaStream) {
+                mediaStream.getTracks().forEach(track => track.stop());
+                mediaStream = null;
+            }
+            await sendAudioForTranscription(blob);
+        };
+        mediaRecorder.start();
+        isRecording = true;
+        updateRecordingUI(true);
+    } catch (error) {
+        console.error('Failed to start recording:', error);
+        showError('Unable to access microphone. Please allow microphone access.');
+    }
+}
+
+function stopRecording() {
+    if (mediaRecorder && isRecording) {
+        mediaRecorder.stop();
+        isRecording = false;
+        updateRecordingUI(false);
+    }
+}
+
+async function sendAudioForTranscription(audioBlob) {
+    showLoading();
+    try {
+        const formData = new FormData();
+        formData.append('file', audioBlob, 'history-audio.webm');
+        const response = await fetch(`${API_BASE_URL}/audio/stt`, {
+            method: 'POST',
+            body: formData
+        });
+        if (!response.ok) {
+            const error = await response.json();
+            throw new Error(error.detail || 'STT request failed');
+        }
+        const result = await response.json();
+        const transcript = (result.text || '').trim();
+        const input = document.getElementById('patientQuestion');
+        if (input) {
+            input.value = transcript;
+        }
+        await sendMessageText(transcript);
+    } catch (error) {
+        console.error('Failed to transcribe audio:', error);
+        showError(error.message);
+    } finally {
+        hideLoading();
     }
 }
 
@@ -461,6 +571,13 @@ async function askStaffNurse() {
                 <p>${response.staff_nurse_response}</p>
             `;
         }
+
+        if (response.staff_nurse_audio && response.staff_nurse_audio.audio_base64) {
+            playAudioFromBase64(
+                response.staff_nurse_audio.audio_base64,
+                response.staff_nurse_audio.content_type
+            );
+        }
         
         input.value = '';
         
@@ -486,7 +603,7 @@ async function finishStep(step) {
         // Display appropriate feedback/results
         if (step === 'history') {
             // History: Show narrated feedback + score
-            displayHistoryFeedback(response.feedback);
+            displayHistoryFeedback(response.feedback, response.feedback_audio);
         } else if (step === 'assessment') {
             // Assessment: Show MCQ results only (no narration)
             displayAssessmentResults(response.mcq_result);
@@ -500,7 +617,7 @@ async function finishStep(step) {
     }
 }
 
-function displayHistoryFeedback(feedback) {
+function displayHistoryFeedback(feedback, feedbackAudio) {
     const modal = document.getElementById('feedbackModal');
     const content = document.getElementById('feedbackContent');
     
@@ -537,6 +654,10 @@ function displayHistoryFeedback(feedback) {
     
     content.innerHTML = html;
     modal.style.display = 'flex';
+
+    if (feedbackAudio && feedbackAudio.audio_base64) {
+        playAudioFromBase64(feedbackAudio.audio_base64, feedbackAudio.content_type);
+    }
 }
 
 function displayAssessmentResults(mcqResult) {

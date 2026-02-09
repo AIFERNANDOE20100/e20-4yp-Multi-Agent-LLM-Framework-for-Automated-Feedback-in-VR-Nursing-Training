@@ -254,6 +254,15 @@ select:focus {
     color: white;
 }
 
+.btn-record {
+    background: var(--danger-color);
+    color: white;
+}
+
+.btn-record.recording {
+    background: #991b1b;
+}
+
 .btn-large {
     padding: 16px 32px;
     font-size: 1.1rem;
@@ -274,6 +283,18 @@ select:focus {
 
 .input-group input {
     flex: 1;
+}
+
+.voice-controls {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-top: 10px;
+}
+
+.recording-status {
+    font-weight: 600;
+    color: var(--text-secondary);
 }
 
 /* Main Content Layout */
