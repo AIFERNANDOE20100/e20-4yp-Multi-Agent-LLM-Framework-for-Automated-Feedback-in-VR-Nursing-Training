@@ -15,15 +15,6 @@ from app.utils.scoring import aggregate_scores
 
 
 class EvaluationService:
-    """
-    Evaluation Orchestrator (Updated Architecture)
-
-    ✔ LLM identifies checklist items (KnowledgeAgent metadata)
-    ✔ Scoring is deterministic (weighted rubric)
-    ✔ LLM used only for narrative feedback
-    ✔ No verdict-based zeroing
-    ✔ No confidence-based math
-    """
 
     def __init__(
         self,

@@ -9,7 +9,6 @@ class StaffNurseAgent(BaseAgent):
     Three modes:
     1. GUIDANCE: Explains current/next step
     2. VERIFICATION (Conversational): Student shows material and describes it verbally
-    3. VERIFICATION (Structured - deprecated): Old form-based method
     
     Does NOT evaluate, approve progression, or block steps.
     """

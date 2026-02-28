@@ -6,11 +6,6 @@ from app.utils.scoring import aggregate_scores
 class Coordinator:
     """
     Aggregates evaluator outputs into a unified feedback object.
-
-    IMPORTANT:
-    - This class does NOT control step progression
-    - This class does NOT block or lock sessions
-    - All outputs are informational and feedback-oriented
     """
 
     def aggregate(

@@ -5,13 +5,6 @@ from app.agents.agent_base import BaseAgent
 class PatientAgent(BaseAgent):
     """
     LLM-driven virtual patient for HISTORY step.
-
-    REVISED (Week-9):
-    - Uses ONLY Firestore scenario data
-    - No RAG
-    - No hallucination
-    - Deterministic and scenario-faithful
-    - Natural, realistic patient responses
     """
 
     def _format_patient_history(self, history: Dict) -> str:
