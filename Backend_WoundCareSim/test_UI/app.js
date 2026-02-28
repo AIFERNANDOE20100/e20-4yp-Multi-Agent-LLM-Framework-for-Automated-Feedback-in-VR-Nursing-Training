@@ -895,29 +895,17 @@ async function askStaffNurse(messageOverride) {
 // ==========================================
 
 async function finishStep(step) {
-    try {
-        const response = await apiCall('/session/step', 'POST', {
-            session_id: currentSession.sessionId,
-            step: step
-        });
-        
-        // Store next step
-        currentSession.nextStep = response.next_step;
-        
-        // Display appropriate feedback/results
-        if (step === 'history') {
-            // History: Show narrated feedback + score
-            displayHistoryFeedback(response.feedback, response.feedback_audio);
-        } else if (step === 'assessment') {
-            // Assessment: Show MCQ results only (no narration)
-            displayAssessmentResults(response.mcq_result, response.summary_audio);
-        } else if (step === 'cleaning_and_dressing') {
-            // Cleaning & Dressing: Silently move to next step with no summary/modal/audio
-            continueToNextStep();
-        }
-        
-    } catch (error) {
-        console.error('Failed to finish step:', error);
+    // Mark that we are waiting for step completion so handleServerEvent
+    // can coordinate feedback and navigation correctly.
+    currentSession.awaitingStepCompletion = true;
+    currentSession.feedbackRenderedForPendingStep = false;
+    currentSession.deferredNextStep = null;
+
+    const sent = sendWsEvent('step_complete', { step });
+    if (!sent) {
+        // Reset flags if WS is down so the UI is not stuck
+        currentSession.awaitingStepCompletion = false;
+        showError('WebSocket is disconnected. Please reconnect and try again.');
     }
 }
 
@@ -1033,9 +1021,18 @@ function closeFeedbackModal() {
 
 function continueToNextStep() {
     closeFeedbackModal();
-    
-    // Navigate to next step
-    switch (currentSession.nextStep) {
+
+    // deferredNextStep is set by the step_complete WS event when feedback
+    // hasn't rendered yet. Fall back to nextStep for non-deferred cases.
+    const nextStep = currentSession.deferredNextStep || currentSession.nextStep;
+
+    // Clear all coordination flags before navigating
+    currentSession.awaitingStepCompletion = false;
+    currentSession.feedbackRenderedForPendingStep = false;
+    currentSession.deferredNextStep = null;
+    currentSession.nextStep = nextStep;
+
+    switch (nextStep) {
         case 'assessment':
             showAssessmentStep();
             break;
@@ -1046,7 +1043,7 @@ function continueToNextStep() {
             showCompletionScreen();
             break;
         default:
-            console.error('Unknown next step:', currentSession.nextStep);
+            console.error('Unknown next step:', nextStep);
     }
 }
 
