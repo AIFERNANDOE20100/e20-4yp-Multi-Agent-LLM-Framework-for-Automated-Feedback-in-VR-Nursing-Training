@@ -173,14 +173,11 @@ async def websocket_endpoint(session_id: str, websocket: WebSocket):
                     await _send_server_event(websocket, "nurse_message", {"text": response, "role": "patient"})
                     await _send_tts_event(websocket, await _safe_tts(response, role="patient"), "patient")
                 else:
-                    staff_nurse = StaffNurseAgent()
-                    response = await staff_nurse.respond(
-                        student_input=text,
-                        current_step=current_step,
-                        next_step=None,
+                    await _send_error(
+                        websocket,
+                        "text_message is only valid during the history step",
                     )
-                    await _send_server_event(websocket, "nurse_message", {"text": response, "role": "nurse"})
-                    await _send_tts_event(websocket, await _safe_tts(response, role="staff_nurse"), "nurse")
+                    continue
 
             elif event == "nurse_message":
                 student_message = (data.get("text") or "").strip()
@@ -218,6 +215,8 @@ async def websocket_endpoint(session_id: str, websocket: WebSocket):
                         await _send_tts_event(websocket, response.get("feedback_audio"), "feedback")
                         continue
 
+                # For history/assessment/cleaning_and_dressing (non-verification),
+                # nurse_message is always handled by the staff nurse agent.
                 staff_nurse = StaffNurseAgent()
                 response = await staff_nurse.respond(
                     student_input=student_message,
