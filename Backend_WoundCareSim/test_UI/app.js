@@ -877,9 +877,7 @@ async function askStaffNurse(messageOverride) {
     if (!message) return;
 
     try {
-        const sentEvent = currentSession.currentStep === 'cleaning_and_dressing'
-            ? 'nurse_message'
-            : 'text_message';
+        const sentEvent = 'nurse_message';
         const sent = sendWsEvent(sentEvent, { text: message });
         if (!sent) {
             showError('WebSocket is disconnected. Please reconnect and try again.');
