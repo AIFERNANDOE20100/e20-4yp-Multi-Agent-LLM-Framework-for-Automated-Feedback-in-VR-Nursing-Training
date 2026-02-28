@@ -20,7 +20,7 @@ from app.api.session_routes import (
 )
 from app.agents.staff_nurse_agent import StaffNurseAgent
 from app.core.state_machine import Step
-from app.rag.retriever import retrieve_with_rag
+from app.rag.retriever import extract_prerequisite_map, retrieve_with_rag
 
 router = APIRouter(tags=["WebSocket"])
 
@@ -273,20 +273,12 @@ async def websocket_endpoint(session_id: str, websocket: WebSocket):
                         "message": "This action was already completed.",
                     }
                 else:
-                    rag_guidelines = session.get("cached_rag_guidelines", "")
-                    if not rag_guidelines:
-                        rag_result = await retrieve_with_rag(
-                            query="wound cleaning and dressing preparation steps sequence prerequisites required actions",
-                            scenario_id=session["scenario_id"],
-                        )
-                        rag_guidelines = rag_result.get("text", "")
-                        session["cached_rag_guidelines"] = rag_guidelines
-
                     performed_actions = session.get("action_events", [])
+                    prerequisite_map = session.get("cached_prerequisite_map", {})
                     rt_feedback = await clinical_agent.get_real_time_feedback(
                         action_type=action_type,
                         performed_actions=performed_actions,
-                        rag_guidelines=rag_guidelines,
+                        prerequisite_map=prerequisite_map,
                     )
                     action_event_service.record_action(
                         session_id=session_id,
@@ -450,6 +442,7 @@ async def websocket_endpoint(session_id: str, websocket: WebSocket):
                 elif current_step == Step.CLEANING_AND_DRESSING.value:
                     session["action_events"] = []
                     session.pop("cached_rag_guidelines", None)
+                    session.pop("cached_prerequisite_map", None)
 
                 next_step = session_manager.advance_step(session_id)
 
@@ -458,7 +451,12 @@ async def websocket_endpoint(session_id: str, websocket: WebSocket):
                         query="wound cleaning and dressing preparation steps sequence prerequisites required actions",
                         scenario_id=session["scenario_id"],
                     )
-                    session["cached_rag_guidelines"] = rag_result.get("text", "")
+                    rag_text = rag_result.get("text", "")
+                    session["cached_rag_guidelines"] = rag_text
+                    session["cached_prerequisite_map"] = await extract_prerequisite_map(
+                        rag_text=rag_text,
+                        base_agent=clinical_agent,
+                    )
 
                 await _send_server_event(websocket, "step_complete", {"next_step": next_step})
                 if next_step == Step.COMPLETED.value:
@@ -482,7 +480,12 @@ async def websocket_endpoint(session_id: str, websocket: WebSocket):
                         query="wound cleaning and dressing preparation steps sequence prerequisites required actions",
                         scenario_id=session["scenario_id"],
                     )
-                    session["cached_rag_guidelines"] = rag_result.get("text", "")
+                    rag_text = rag_result.get("text", "")
+                    session["cached_rag_guidelines"] = rag_text
+                    session["cached_prerequisite_map"] = await extract_prerequisite_map(
+                        rag_text=rag_text,
+                        base_agent=clinical_agent,
+                    )
 
                 await _send_server_event(websocket, "step_complete", {"next_step": next_step})
                 if next_step == Step.COMPLETED.value:

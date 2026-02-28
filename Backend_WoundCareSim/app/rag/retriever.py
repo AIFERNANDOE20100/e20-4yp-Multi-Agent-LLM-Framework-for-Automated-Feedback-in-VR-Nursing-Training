@@ -1,5 +1,7 @@
+import json
 import logging
 from openai import AsyncOpenAI
+from app.agents.agent_base import BaseAgent
 from app.core.config import (
     OPENAI_API_KEY,
     VECTOR_STORE_ID,
@@ -84,3 +86,39 @@ async def retrieve_with_rag(
             "text": "",
             "raw_response": None
         }
+
+
+async def extract_prerequisite_map(
+    rag_text: str,
+    base_agent: BaseAgent
+) -> dict[str, list[str]]:
+    try:
+        response = await base_agent.run(
+            system_prompt=(
+                "You are a clinical guideline parser.\n"
+                "Extract the prerequisite map from the provided nursing guideline text.\n"
+                "Return ONLY a valid JSON object. No markdown, no explanation,\n"
+                "no code fences. Nothing else.\n"
+                "Format:\n"
+                "{\n"
+                '  "action_key": ["prerequisite_action_key", ...],\n'
+                "  ...\n"
+                "}\n"
+                "Rules:\n"
+                "- Use exact action key names as they appear in the document\n"
+                "  (e.g. action_initial_hand_hygiene)\n"
+                "- If an action has no prerequisites, map it to an empty list []\n"
+                "- Include ALL actions found in the document\n"
+                "- Do NOT invent action keys not present in the document"
+            ),
+            user_prompt=rag_text,
+            temperature=0.0,
+        )
+        parsed = json.loads(response)
+        if isinstance(parsed, dict):
+            return parsed
+        logger.warning("extract_prerequisite_map() returned non-dict JSON. Falling back to empty map.")
+        return {}
+    except Exception as e:
+        logger.warning(f"Failed to extract prerequisite map from RAG text: {e}")
+        return {}
