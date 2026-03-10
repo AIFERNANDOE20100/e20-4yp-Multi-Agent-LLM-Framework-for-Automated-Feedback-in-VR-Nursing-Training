@@ -9,13 +9,15 @@ export async function apiGet(path) {
 }
 
 export async function apiPost(path, body, options = {}) {
+  const method = options.method || "POST";
+  const headers = {
+    ...(body !== null ? { "Content-Type": "application/json" } : {}),
+    ...(options.headers || {}),
+  };
   const res = await fetch(`${API_BASE_URL}${path}`, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      ...(options.headers || {}),
-    },
-    body: JSON.stringify(body),
+    method,
+    headers,
+    body: body !== null ? JSON.stringify(body) : undefined,
   });
 
   if (!res.ok) {

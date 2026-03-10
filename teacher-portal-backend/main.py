@@ -126,6 +126,16 @@ def get_scenario(scenario_id: str) -> Dict[str, Any]:
     return scenario
 
 
+@app.delete("/scenarios/{scenario_id}")
+def delete_scenario(scenario_id: str) -> Dict[str, Any]:
+    doc_ref = DB.collection(COLLECTION).document(scenario_id)
+    doc = doc_ref.get()
+    if not doc.exists:
+        raise HTTPException(status_code=404, detail="Scenario not found")
+    doc_ref.delete()
+    return {"deleted": scenario_id}
+
+
 @app.post("/scenarios")
 def create_scenario(payload: Dict[str, Any]) -> Dict[str, Any]:
     # Create document with auto-generated ID

@@ -38,6 +38,121 @@ const EMPTY_QUESTION = () => ({
   explanation: "",
 });
 
+function formatValue(value) {
+  if (Array.isArray(value)) {
+    return value.length ? value.join(", ") : "-";
+  }
+  if (typeof value === "boolean") {
+    return value ? "Yes" : "No";
+  }
+  if (value === null || value === undefined || value === "") {
+    return "-";
+  }
+  return value;
+}
+
+function ScenarioPreview({ scenario }) {
+  const patient = scenario.patient_history || {};
+  const surgery = patient.surgery_details || {};
+  const pain = patient.pain_level || {};
+  const comfort = patient.comfort_needs || {};
+  const wound = scenario.wound_details || {};
+  const questions = scenario.assessment_questions || [];
+
+  return (
+    <div className="preview">
+      <div className="preview-header">
+        <h2>{scenario.scenario_title || "Scenario Preview"}</h2>
+        <div className="preview-meta">
+          <span>ID: {scenario.scenario_id || "-"}</span>
+          <span>Created: {scenario.created_at || "-"}</span>
+        </div>
+      </div>
+
+      <div className="preview-grid">
+        <div className="preview-section">
+          <h3>Patient Details</h3>
+          <div className="info-row"><span>Name</span><span>{formatValue(patient.name)}</span></div>
+          <div className="info-row"><span>Age</span><span>{formatValue(patient.age)}</span></div>
+          <div className="info-row"><span>Gender</span><span>{formatValue(patient.gender)}</span></div>
+          <div className="info-row"><span>Address</span><span>{formatValue(patient.address)}</span></div>
+          <div className="info-row"><span>Medical History</span><span>{formatValue(patient.medical_history)}</span></div>
+          <div className="info-row"><span>Allergies</span><span>{formatValue(patient.allergies)}</span></div>
+          <div className="info-row"><span>Current Medications</span><span>{formatValue(patient.current_medications)}</span></div>
+        </div>
+
+        <div className="preview-section">
+          <h3>Surgery Details</h3>
+          <div className="info-row"><span>Procedure</span><span>{formatValue(surgery.procedure)}</span></div>
+          <div className="info-row"><span>Date</span><span>{formatValue(surgery.date)}</span></div>
+          <div className="info-row"><span>Surgeon</span><span>{formatValue(surgery.surgeon)}</span></div>
+          <div className="info-row"><span>Reason</span><span>{formatValue(surgery.reason)}</span></div>
+          <div className="info-row"><span>Hospital</span><span>{formatValue(surgery.hospital)}</span></div>
+        </div>
+
+        <div className="preview-section">
+          <h3>Pain Level</h3>
+          <div className="info-row"><span>Description</span><span>{formatValue(pain.description)}</span></div>
+          <div className="info-row"><span>Pain Score</span><span>{formatValue(pain.pain_score)}</span></div>
+          <div className="info-row"><span>Characteristics</span><span>{formatValue(pain.pain_characteristics)}</span></div>
+          <div className="info-row"><span>Pain Medication</span><span>{formatValue(pain.pain_medication)}</span></div>
+          <div className="info-row"><span>Last Medication</span><span>{formatValue(pain.last_pain_medication)}</span></div>
+        </div>
+
+        <div className="preview-section">
+          <h3>Comfort Needs</h3>
+          <div className="info-row"><span>Current Position</span><span>{formatValue(comfort.current_position)}</span></div>
+          <div className="info-row"><span>Needs Bathroom</span><span>{formatValue(comfort.needs_bathroom)}</span></div>
+          <div className="info-row"><span>Needs Water</span><span>{formatValue(comfort.needs_water)}</span></div>
+          <div className="info-row"><span>Comfortable to Proceed</span><span>{formatValue(comfort.comfortable_to_proceed)}</span></div>
+        </div>
+      </div>
+
+      <div className="preview-section">
+        <h3>Wound Details (Fixed)</h3>
+        <div className="info-row"><span>Location</span><span>{formatValue(wound.location)}</span></div>
+        <div className="info-row"><span>Type</span><span>{formatValue(wound.wound_type)}</span></div>
+        <div className="info-row"><span>Appearance</span><span>{formatValue(wound.appearance)}</span></div>
+        <div className="info-row"><span>Size</span><span>{formatValue(wound.size)}</span></div>
+        <div className="info-row"><span>Wound Age</span><span>{formatValue(wound.wound_age)}</span></div>
+        <div className="info-row"><span>Suture Type</span><span>{formatValue(wound.suture_type)}</span></div>
+        <div className="info-row"><span>Expected Healing</span><span>{formatValue(wound.expected_healing)}</span></div>
+        <div className="info-row"><span>Dressing Status</span><span>{formatValue(wound.dressing_status)}</span></div>
+      </div>
+
+      <div className="preview-section">
+        <h3>MCQ Questions</h3>
+        {questions.length === 0 ? (
+          <div className="muted">No questions added.</div>
+        ) : (
+          questions.map((q, index) => (
+            <div key={q.id || index} className="question-card">
+              <div className="question-title">
+                Q{index + 1}. {q.question}
+              </div>
+              <ul className="options-list">
+                {(q.options || []).map((opt, optIndex) => (
+                  <li key={optIndex}>
+                    {String.fromCharCode(65 + optIndex)}. {opt}
+                  </li>
+                ))}
+              </ul>
+              <div className="info-row">
+                <span>Correct Answer</span>
+                <span>{formatValue(q.correct_answer)}</span>
+              </div>
+              <div className="info-row">
+                <span>Explanation</span>
+                <span>{formatValue(q.explanation)}</span>
+              </div>
+            </div>
+          ))
+        )}
+      </div>
+    </div>
+  );
+}
+
 export default function App() {
   const [section, setSection] = useState("scenarios");
   const [scenarios, setScenarios] = useState([]);
@@ -83,6 +198,25 @@ export default function App() {
       setSelectedScenario(data);
     } catch (err) {
       setError(err.message || "Failed to load scenario");
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  async function handleDeleteScenario(id) {
+    const ok = window.confirm("Are you sure you want to delete this scenario?");
+    if (!ok) return;
+
+    setLoading(true);
+    setError("");
+    try {
+      await apiPost(`/scenarios/${id}`, null, { method: "DELETE" });
+      if (selectedScenario?.scenario_id === id || selectedScenario?.id === id) {
+        setSelectedScenario(null);
+      }
+      await loadScenarios();
+    } catch (err) {
+      setError(err.message || "Failed to delete scenario");
     } finally {
       setLoading(false);
     }
@@ -260,6 +394,12 @@ export default function App() {
                           >
                             Preview
                           </button>
+                          <button
+                            className="danger"
+                            onClick={() => handleDeleteScenario(scenario.id)}
+                          >
+                            Delete
+                          </button>
                         </td>
                       </tr>
                     ))}
@@ -270,8 +410,7 @@ export default function App() {
 
             {selectedScenario && (
               <div className="panel">
-                <h2>Scenario Preview</h2>
-                <pre>{JSON.stringify(selectedScenario, null, 2)}</pre>
+                <ScenarioPreview scenario={selectedScenario} />
               </div>
             )}
           </section>
