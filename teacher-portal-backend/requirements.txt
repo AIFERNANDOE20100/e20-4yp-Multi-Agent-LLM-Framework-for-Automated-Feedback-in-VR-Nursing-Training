@@ -1,6 +1,0 @@
-﻿fastapi
-uvicorn
-firebase-admin
-openai
-python-multipart
-python-dotenv
