@@ -41,7 +41,7 @@ def aggregate_scores(
 
         elif ev.agent_name == "CommunicationAgent":
             comm_score = 1.0 if ev.verdict == "Appropriate" else \
-                         0.7 if ev.verdict == "Partially Appropriate" else 0.4
+                         0.5 if ev.verdict == "Partially Appropriate" else 0.0
 
             agent_scores["CommunicationAgent"] = comm_score
             composite_score += comm_score * 0.4

@@ -222,11 +222,25 @@ class EvaluationService:
                 }
 
         # ----------------------------------------------
+        # Build structured per-agent feedback dict
+        # ----------------------------------------------
+        agent_feedback: Dict[str, Any] = {}
+        for ev in evaluator_outputs:
+            agent_feedback[ev.agent_name] = {
+                "verdict":         ev.verdict,
+                "strengths":       ev.strengths,
+                "issues_detected": ev.issues_detected,
+                "explanation":     ev.explanation,
+                "confidence":      ev.confidence,
+            }
+
+        # ----------------------------------------------
         # Final Payload
         # ----------------------------------------------
         payload = {
             "step": current_step.value,
             "scores": scores,
+            "agent_feedback": agent_feedback,
             "narrated_feedback": narrated_feedback_dict,
             "raw_feedback": raw_feedback_items,
         }

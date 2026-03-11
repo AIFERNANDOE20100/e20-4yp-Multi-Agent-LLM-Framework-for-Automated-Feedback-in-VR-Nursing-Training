@@ -33,7 +33,25 @@ class CommunicationAgent(BaseAgent):
                 issues_detected=["No patient communication detected"],
                 explanation="The student did not engage with the patient.",
                 verdict="Inappropriate",
-                confidence=0.0
+                confidence=1.0
+            )
+
+        # Check that the student actually spoke at least once.
+        # The transcript contains lines like "student: ..." and "patient: ..."
+        # If there are no student lines, the LLM has nothing real to evaluate.
+        student_lines = [
+            line for line in student_input.splitlines()
+            if line.strip().lower().startswith("student:")
+        ]
+        if not student_lines:
+            return EvaluatorResponse(
+                agent_name="CommunicationAgent",
+                step=current_step,
+                strengths=[],
+                issues_detected=["No patient communication detected — student asked no questions"],
+                explanation="The student did not ask any questions or communicate with the patient during history taking.",
+                verdict="Inappropriate",
+                confidence=1.0
             )
 
         system_prompt = (

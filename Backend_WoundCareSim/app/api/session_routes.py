@@ -391,9 +391,7 @@ async def complete_step(payload: CompleteStepInput):
             student_message_to_nurse=payload.user_input,
         )
 
-        conversation_manager.clear_step(payload.session_id, Step.HISTORY.value)
-
-        # ── Save history step to Firestore immediately ──
+        # ── Save history step to Firestore BEFORE clearing the transcript ──
         try:
             StudentLogService.save_history_step(
                 session_id=payload.session_id,
@@ -402,6 +400,8 @@ async def complete_step(payload: CompleteStepInput):
             )
         except Exception as exc:
             print(f"[LOG] ⚠️  Failed to save history step: {exc}")
+
+        conversation_manager.clear_step(payload.session_id, Step.HISTORY.value)
 
         feedback_payload = {
             "narrated_feedback": evaluation.get("narrated_feedback"),
