@@ -20,7 +20,6 @@ from app.agents.feedback_narrator_agent import FeedbackNarratorAgent
 from app.utils.mcq_evaluator import MCQEvaluator
 from app.services.groq_audio_service import GroqAudioService, synthesize_speech
 from app.services.student_log_service import StudentLogService
-from app.scripts.upload_scenario import save_student_log_to_firestore
 
 # NOTE: The imports above are kept because websocket_routes.py imports
 # singletons (session_manager, evaluation_service, clinical_agent, etc.)
@@ -382,6 +381,16 @@ async def complete_step(payload: CompleteStepInput):
 
         conversation_manager.clear_step(payload.session_id, Step.HISTORY.value)
 
+        # ── Save history step to Firestore immediately ──
+        try:
+            StudentLogService.save_history_step(
+                session_id=payload.session_id,
+                session_manager=session_manager,
+                conversation_manager=conversation_manager,
+            )
+        except Exception as exc:
+            print(f"[LOG] ⚠️  Failed to save history step: {exc}")
+
         feedback_payload = {
             "narrated_feedback": evaluation.get("narrated_feedback"),
             "score": evaluation.get("scores", {}).get("step_quality_indicator"),
@@ -410,6 +419,15 @@ async def complete_step(payload: CompleteStepInput):
                 f"{mcq_result.get('total_questions')} questions correctly."
             )
 
+        # ── Save assessment step to Firestore immediately ──
+        try:
+            StudentLogService.save_assessment_step(
+                session_id=payload.session_id,
+                session_manager=session_manager,
+            )
+        except Exception as exc:
+            print(f"[LOG] ⚠️  Failed to save assessment step: {exc}")
+
         response["feedback_type"] = "assessment"
         response["feedback"] = {
             "mcq_result": mcq_result,
@@ -419,6 +437,15 @@ async def complete_step(payload: CompleteStepInput):
         session["mcq_answers"] = {}
 
     elif current_step == Step.CLEANING_AND_DRESSING.value:
+        # ── Save cleaning step to Firestore before clearing action data ──
+        try:
+            StudentLogService.save_cleaning_step(
+                session_id=payload.session_id,
+                session_manager=session_manager,
+            )
+        except Exception as exc:
+            print(f"[LOG] ⚠️  Failed to save cleaning step: {exc}")
+
         session["action_events"] = []
         session.pop("cached_rag_guidelines", None)
         session.pop("cached_prerequisite_map", None)
@@ -446,18 +473,8 @@ async def complete_step(payload: CompleteStepInput):
 
     response["session_end"] = next_step == Step.COMPLETED.value
 
-    # Auto-save log to Firestore when session reaches COMPLETED
     if next_step == Step.COMPLETED.value:
-        try:
-            log = StudentLogService.generate(
-                session_id=payload.session_id,
-                session_manager=session_manager,
-                conversation_manager=conversation_manager,
-            )
-            firestore_path = save_student_log_to_firestore(log)
-            response["log_firestore_path"] = firestore_path
-        except Exception as exc:
-            print(f"[LOG] ⚠️  Failed to save student log: {exc}")
+        print(f"[LOG] Session {payload.session_id} completed. All steps were saved incrementally.")
 
     return response
 
@@ -479,7 +496,7 @@ async def get_session_log(session_id: str):
             session_manager=session_manager,
             conversation_manager=conversation_manager,
         )
-        firestore_path = save_student_log_to_firestore(log)
+        firestore_path = StudentLogService.save_to_firestore(log)
         print(f"[LOG] Student log saved to Firestore → {firestore_path}")
         return log
     except Exception as exc:
