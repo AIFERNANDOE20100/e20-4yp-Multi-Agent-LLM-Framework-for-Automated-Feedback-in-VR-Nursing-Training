@@ -1,7 +1,5 @@
 import { useEffect, useState } from "react";
-import { Alert, Button, CircularProgress, Stack } from "@mui/material";
 import { useNavigate, useParams } from "react-router-dom";
-
 import ScenarioForm from "../components/ScenarioForm.jsx";
 import { getScenarioById } from "../api/backend.js";
 
@@ -25,7 +23,6 @@ export default function ScenarioDetails() {
         setLoading(false);
       }
     }
-
     loadScenario();
   }, [scenarioId]);
 
@@ -33,20 +30,29 @@ export default function ScenarioDetails() {
     <section className="page-grid">
       <div className="page-header">
         <div>
+          <div className="header-eyebrow">Scenario</div>
           <h1>Scenario Details</h1>
           <p>Review the scenario in read-only clinical form layout.</p>
         </div>
         {scenario && (
-          <Button variant="contained" onClick={() => navigate(`/scenarios/${scenarioId}/edit`)}>
+          <button
+            className="btn btn-primary"
+            onClick={() => navigate(`/scenarios/${scenarioId}/edit`)}
+          >
             Edit Scenario
-          </Button>
+          </button>
         )}
       </div>
 
-      <Stack spacing={2}>
-        {error && <Alert severity="error">{error}</Alert>}
-        {loading ? <CircularProgress /> : scenario && <ScenarioForm scenarioData={scenario} mode="view" />}
-      </Stack>
+      {error && <div className="status error">{error}</div>}
+
+      {loading ? (
+        <div className="spinner-wrap">
+          <div className="spinner" aria-label="Loading" />
+        </div>
+      ) : (
+        scenario && <ScenarioForm scenarioData={scenario} mode="view" />
+      )}
     </section>
   );
 }

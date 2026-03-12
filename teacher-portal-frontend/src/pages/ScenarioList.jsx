@@ -1,7 +1,5 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Alert, Button, Stack } from "@mui/material";
-
 import ScenarioCard from "../components/ScenarioCard.jsx";
 import { getScenarios } from "../api/backend.js";
 
@@ -10,6 +8,7 @@ export default function ScenarioList() {
   const [scenarios, setScenarios] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+
   async function handleLoadScenarios() {
     setLoading(true);
     setError("");
@@ -31,42 +30,49 @@ export default function ScenarioList() {
     <section className="page-grid">
       <div className="page-header">
         <div>
+          <div className="header-eyebrow">Library</div>
           <h1>Scenario List</h1>
-          <p>Browse saved scenarios, open them in the structured viewer, or launch VR sessions.</p>
+          <p>Browse saved scenarios, view details, or launch a VR session.</p>
         </div>
-        <Stack direction="row" spacing={1.5}>
-          <Button variant="contained" onClick={handleLoadScenarios}>
-            {loading ? "Loading..." : "Refresh Scenarios"}
-          </Button>
-          <Button variant="outlined" onClick={() => navigate("/scenarios/create")}>
-            New Scenario
-          </Button>
-        </Stack>
+        <div className="btn-row">
+          <button className="btn btn-secondary" onClick={handleLoadScenarios} disabled={loading}>
+            {loading ? "Loading…" : "↺ Refresh"}
+          </button>
+          <button className="btn btn-primary" onClick={() => navigate("/scenarios/create")}>
+            + New Scenario
+          </button>
+        </div>
       </div>
 
-      {error && <Alert severity="error">{error}</Alert>}
+      {error && <div className="status error">{error}</div>}
 
-      <div className="scenario-list">
-        {scenarios.length === 0 ? (
-          <div className="panel">
-            <p className="muted">No scenarios loaded yet. Use refresh to query the backend.</p>
-          </div>
-        ) : (
-          scenarios.map((scenario) => (
-            <ScenarioCard
-              key={scenario.scenario_id}
-              scenario={scenario}
-              onView={() => navigate(`/scenarios/${scenario.scenario_id}`)}
-              onEdit={() => navigate(`/scenarios/${scenario.scenario_id}/edit`)}
-              onStart={() =>
-                navigate("/sessions/start", {
-                  state: { scenarioId: scenario.scenario_id },
-                })
-              }
-            />
-          ))
-        )}
-      </div>
+      {loading ? (
+        <div className="spinner-wrap">
+          <div className="spinner" aria-label="Loading" />
+        </div>
+      ) : (
+        <div className="scenario-list">
+          {scenarios.length === 0 ? (
+            <div className="panel">
+              <p className="muted">No scenarios loaded yet. Use Refresh to query the backend.</p>
+            </div>
+          ) : (
+            scenarios.map((scenario) => (
+              <ScenarioCard
+                key={scenario.scenario_id}
+                scenario={scenario}
+                onView={() => navigate(`/scenarios/${scenario.scenario_id}`)}
+                onEdit={() => navigate(`/scenarios/${scenario.scenario_id}/edit`)}
+                onStart={() =>
+                  navigate("/sessions/start", {
+                    state: { scenarioId: scenario.scenario_id },
+                  })
+                }
+              />
+            ))
+          )}
+        </div>
+      )}
     </section>
   );
 }

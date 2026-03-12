@@ -1,92 +1,81 @@
-import {
-  Button,
-  Card,
-  CardContent,
-  Grid,
-  MenuItem,
-  Stack,
-  TextField,
-  Typography,
-} from "@mui/material";
+const OPTION_LABELS = ["A", "B", "C", "D"];
 
 function QuestionCard({ question, index, readOnly, onQuestionChange, onOptionChange, onDelete, errors }) {
-  const optionLabels = ["A", "B", "C", "D"];
-
   return (
-    <Card variant="outlined" sx={{ borderRadius: 3 }}>
-      <CardContent>
-        <Stack
-          direction={{ xs: "column", sm: "row" }}
-          justifyContent="space-between"
-          alignItems={{ xs: "stretch", sm: "center" }}
-          spacing={1.5}
-          sx={{ mb: 2 }}
-        >
-          <Typography variant="subtitle1">Question {index + 1}</Typography>
-          {!readOnly && (
-            <Button color="error" onClick={onDelete}>
-              Delete Question
-            </Button>
-          )}
-        </Stack>
+    <div className="panel" style={{ background: "var(--bg-elevated)", borderColor: "var(--border-medium)" }}>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "16px" }}>
+        <span className="section-title">Question {index + 1}</span>
+        {!readOnly && (
+          <button type="button" className="btn btn-danger btn-sm" onClick={onDelete}>
+            Delete
+          </button>
+        )}
+      </div>
 
-        <Grid container spacing={2}>
-          <Grid item xs={12}>
-            <TextField
-              label="Question"
-              value={question.question || ""}
-              onChange={(event) => onQuestionChange("question", event.target.value)}
-              fullWidth
-              InputProps={{ readOnly }}
-            />
-          </Grid>
+      <div style={{ display: "grid", gap: "16px" }}>
+        <div className="field">
+          <label>Question text</label>
+          <input
+            value={question.question || ""}
+            readOnly={readOnly}
+            onChange={(e) => onQuestionChange("question", e.target.value)}
+            placeholder="Enter the question…"
+          />
+        </div>
 
-          {optionLabels.map((label, optionIndex) => (
-            <Grid item xs={12} md={6} key={`${question.id || index}-${label}`}>
-              <TextField
-                label={`Option ${label}`}
+        <div className="form-grid">
+          {OPTION_LABELS.map((label, optionIndex) => (
+            <div className="field" key={`${question.id || index}-${label}`}>
+              <label>Option {label}</label>
+              <input
                 value={question.options?.[optionIndex] || ""}
-                onChange={(event) => onOptionChange(optionIndex, event.target.value)}
-                fullWidth
-                error={Boolean(errors[`question_${index}_options`])}
-                helperText={optionIndex === 0 ? errors[`question_${index}_options`] : ""}
-                InputProps={{ readOnly }}
+                readOnly={readOnly}
+                onChange={(e) => onOptionChange(optionIndex, e.target.value)}
+                placeholder={`Option ${label}`}
+                style={errors[`question_${index}_options`] ? { borderColor: "var(--error-text)" } : {}}
               />
-            </Grid>
+            </div>
           ))}
+        </div>
 
-          <Grid item xs={12} md={4}>
-            <TextField
-              select
-              label="Correct Answer"
-              value={question.correct_answer || ""}
-              onChange={(event) => onQuestionChange("correct_answer", event.target.value)}
-              fullWidth
-              error={Boolean(errors[`question_${index}_correct_answer`])}
-              helperText={errors[`question_${index}_correct_answer`]}
-              InputProps={{ readOnly }}
+        {errors[`question_${index}_options`] && (
+          <span style={{ color: "var(--error-text)", fontSize: "0.8rem" }}>
+            {errors[`question_${index}_options`]}
+          </span>
+        )}
+
+        <div className="form-grid">
+          <div className="field">
+            <label>Correct Answer</label>
+            <select
+              value={question.correct_answer || "A"}
+              disabled={readOnly}
+              onChange={(e) => onQuestionChange("correct_answer", e.target.value)}
+              style={errors[`question_${index}_correct_answer`] ? { borderColor: "var(--error-text)" } : {}}
             >
-              {optionLabels.map((label) => (
-                <MenuItem key={label} value={label}>
-                  {label}
-                </MenuItem>
+              {OPTION_LABELS.map((label) => (
+                <option key={label} value={label}>{label}</option>
               ))}
-            </TextField>
-          </Grid>
-          <Grid item xs={12} md={8}>
-            <TextField
-              label="Explanation"
+            </select>
+            {errors[`question_${index}_correct_answer`] && (
+              <span style={{ color: "var(--error-text)", fontSize: "0.8rem" }}>
+                {errors[`question_${index}_correct_answer`]}
+              </span>
+            )}
+          </div>
+          <div className="field" style={{ gridColumn: "span 1" }}>
+            <label>Explanation</label>
+            <textarea
               value={question.explanation || ""}
-              onChange={(event) => onQuestionChange("explanation", event.target.value)}
-              fullWidth
-              multiline
-              minRows={2}
-              InputProps={{ readOnly }}
+              readOnly={readOnly}
+              onChange={(e) => onQuestionChange("explanation", e.target.value)}
+              placeholder="Why is this the correct answer?"
+              style={{ minHeight: "80px" }}
             />
-          </Grid>
-        </Grid>
-      </CardContent>
-    </Card>
+          </div>
+        </div>
+      </div>
+    </div>
   );
 }
 
@@ -100,45 +89,37 @@ export default function AssessmentQuestionsForm({
   onOptionChange,
 }) {
   return (
-    <Card sx={{ borderRadius: 4 }}>
-      <CardContent>
-        <Stack
-          direction={{ xs: "column", sm: "row" }}
-          justifyContent="space-between"
-          alignItems={{ xs: "stretch", sm: "center" }}
-          spacing={2}
-          sx={{ mb: 2 }}
-        >
-          <div>
-            <Typography variant="h6">Assessment Questions</Typography>
-            {errors.assessment_questions && (
-              <Typography variant="body2" color="error">
-                {errors.assessment_questions}
-              </Typography>
-            )}
-          </div>
-          {!readOnly && (
-            <Button variant="contained" onClick={onAddQuestion}>
-              Add Question
-            </Button>
+    <div className="panel">
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "20px" }}>
+        <div>
+          <h3>Assessment Questions</h3>
+          {errors.assessment_questions && (
+            <span style={{ color: "var(--error-text)", fontSize: "0.8rem" }}>
+              {errors.assessment_questions}
+            </span>
           )}
-        </Stack>
+        </div>
+        {!readOnly && (
+          <button type="button" className="btn btn-primary btn-sm" onClick={onAddQuestion}>
+            + Add Question
+          </button>
+        )}
+      </div>
 
-        <Stack spacing={2}>
-          {questions.map((question, index) => (
-            <QuestionCard
-              key={question.id || `question-${index}`}
-              question={question}
-              index={index}
-              readOnly={readOnly}
-              errors={errors}
-              onDelete={() => onDeleteQuestion(index)}
-              onQuestionChange={(field, value) => onQuestionChange(index, field, value)}
-              onOptionChange={(optionIndex, value) => onOptionChange(index, optionIndex, value)}
-            />
-          ))}
-        </Stack>
-      </CardContent>
-    </Card>
+      <div style={{ display: "grid", gap: "16px" }}>
+        {questions.map((question, index) => (
+          <QuestionCard
+            key={question.id || `question-${index}`}
+            question={question}
+            index={index}
+            readOnly={readOnly}
+            errors={errors}
+            onDelete={() => onDeleteQuestion(index)}
+            onQuestionChange={(field, value) => onQuestionChange(index, field, value)}
+            onOptionChange={(optionIndex, value) => onOptionChange(index, optionIndex, value)}
+          />
+        ))}
+      </div>
+    </div>
   );
 }

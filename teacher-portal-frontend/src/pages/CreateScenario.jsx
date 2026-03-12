@@ -1,6 +1,4 @@
 import { useState } from "react";
-import { Alert, Stack } from "@mui/material";
-
 import ScenarioForm from "../components/ScenarioForm.jsx";
 import { createScenario } from "../api/backend.js";
 
@@ -31,15 +29,17 @@ export default function CreateScenario() {
     <section className="page-grid">
       <div className="page-header">
         <div>
+          <div className="header-eyebrow">Scenario</div>
           <h1>Create Scenario</h1>
           <p>Use the structured clinical form instead of editing raw scenario JSON.</p>
         </div>
       </div>
 
-      <Stack spacing={2}>
-        {status.message && <Alert severity={status.type}>{status.message}</Alert>}
-        <ScenarioForm mode="create" onSubmit={handleCreate} />
-      </Stack>
+      {status.message && (
+        <div className={`status ${status.type}`}>{status.message}</div>
+      )}
+
+      <ScenarioForm mode="create" onSubmit={handleCreate} />
     </section>
   );
 }

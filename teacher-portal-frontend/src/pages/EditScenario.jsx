@@ -1,7 +1,5 @@
 import { useEffect, useState } from "react";
-import { Alert, CircularProgress, Stack } from "@mui/material";
 import { useParams } from "react-router-dom";
-
 import ScenarioForm from "../components/ScenarioForm.jsx";
 import { getScenarioById, updateScenario } from "../api/backend.js";
 
@@ -26,7 +24,6 @@ export default function EditScenario() {
         setLoading(false);
       }
     }
-
     loadScenario();
   }, [scenarioId]);
 
@@ -55,26 +52,30 @@ export default function EditScenario() {
     <section className="page-grid">
       <div className="page-header">
         <div>
+          <div className="header-eyebrow">Scenario</div>
           <h1>Edit Scenario</h1>
           <p>Update the structured scenario form and save it back to Firestore.</p>
         </div>
       </div>
 
-      <Stack spacing={2}>
-        {status.message && <Alert severity={status.type}>{status.message}</Alert>}
-        {loading ? (
-          <CircularProgress />
-        ) : (
-          scenario && (
-            <ScenarioForm
-              scenarioData={scenario}
-              mode="edit"
-              onSubmit={handleUpdate}
-              submitLabel="Update Scenario"
-            />
-          )
-        )}
-      </Stack>
+      {status.message && (
+        <div className={`status ${status.type}`}>{status.message}</div>
+      )}
+
+      {loading ? (
+        <div className="spinner-wrap">
+          <div className="spinner" aria-label="Loading" />
+        </div>
+      ) : (
+        scenario && (
+          <ScenarioForm
+            scenarioData={scenario}
+            mode="edit"
+            onSubmit={handleUpdate}
+            submitLabel="Update Scenario"
+          />
+        )
+      )}
     </section>
   );
 }
