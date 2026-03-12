@@ -59,12 +59,26 @@ class StaffNurseAgent(BaseAgent):
         self,
         student_input: str,
         current_step: str,
-        next_step: str | None
+        next_step: str | None,
+        clinical_context: dict = None,
     ) -> str:
         """
         Guidance-only response. Called when the student sends a general nurse message
         that is NOT a verification request (handled separately via verify_material_conversational).
         """
+        clinical_context = clinical_context or {}
+        risk_factors = clinical_context.get("risk_factors", [])
+        has_diabetes = "diabetes" in risk_factors
+
+        patient_context_note = ""
+        if has_diabetes:
+            patient_context_note = (
+                "\nPATIENT CONTEXT: This patient has Type 2 Diabetes Mellitus. "
+                "Provide guidance with awareness of higher infection risk and delayed healing. "
+                "Emphasise the importance of aseptic technique and thorough preparation "
+                "for this patient."
+            )
+
         is_finishing = self._is_student_finishing(student_input)
 
         current_guidance = STEP_GUIDANCE.get(current_step, "")
@@ -90,6 +104,7 @@ class StaffNurseAgent(BaseAgent):
                 "- Do NOT evaluate performance\n"
                 "- Do NOT grant permission to proceed\n"
                 "- The student controls step progression\n\n"
+                f"{patient_context_note}\n\n"
                 "TASK:\n"
                 "- Student indicated they are finished with the current step\n"
                 "- Briefly explain the NEXT step\n"
@@ -113,6 +128,7 @@ class StaffNurseAgent(BaseAgent):
                 "- Do NOT evaluate performance\n"
                 "- Do NOT grant permission to proceed\n"
                 "- The student controls step progression\n\n"
+                f"{patient_context_note}\n\n"
                 "TASK:\n"
                 "- Student is asking about the CURRENT step\n"
                 "- Explain what they should be doing now\n"
@@ -133,7 +149,8 @@ class StaffNurseAgent(BaseAgent):
     async def verify_material_conversational(
         self,
         student_message: str,
-        material_type: str
+        material_type: str,
+        clinical_context: dict = None,
     ) -> dict:
         """
         Evaluate the student's material verification message via LLM and return a
@@ -154,6 +171,18 @@ class StaffNurseAgent(BaseAgent):
         from datetime import date
         today_str = date.today().strftime("%B %d, %Y")  # e.g. "February 28, 2026"
 
+        clinical_context = clinical_context or {}
+        risk_factors = clinical_context.get("risk_factors", [])
+        has_diabetes = "diabetes" in risk_factors
+
+        patient_context_note = ""
+        if has_diabetes:
+            patient_context_note = (
+                "\nPATIENT CONTEXT: This patient has Type 2 Diabetes. "
+                "Material verification is especially critical as infection risk is elevated. "
+                "Be thorough in confirming sterility and condition of materials.\n"
+            )
+
         material_label = (
             "cleaning solution (surgical spirit)"
             if material_type == "solution"
@@ -168,6 +197,7 @@ class StaffNurseAgent(BaseAgent):
 
             f"TODAY'S DATE: {today_str}\n"
             "Use this date when judging whether an expiry date the student mentions is past or future.\n\n"
+            f"{patient_context_note}"
 
             "YOUR JOB:\n"
             "Evaluate what the student tells you and return a JSON object with exactly two fields:\n"

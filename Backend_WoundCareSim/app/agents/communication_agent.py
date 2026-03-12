@@ -23,7 +23,11 @@ class CommunicationAgent(BaseAgent):
         student_input: str,
         scenario_metadata: dict,
         rag_response: str,
+        clinical_context: dict = None,
     ) -> EvaluatorResponse:
+        clinical_context = clinical_context or {}
+        risk_factors = clinical_context.get("risk_factors", [])
+        has_diabetes = "diabetes" in risk_factors
 
         if not student_input or student_input.strip() == "":
             return EvaluatorResponse(
@@ -54,6 +58,18 @@ class CommunicationAgent(BaseAgent):
                 confidence=1.0
             )
 
+        clinical_context_note = ""
+        if has_diabetes:
+            clinical_context_note = (
+                "\n\nPATIENT CLINICAL CONTEXT:\n"
+                "This patient has Type 2 Diabetes Mellitus.\n"
+                "When evaluating communication, consider whether the student "
+                "demonstrated awareness of the patient's condition by communicating "
+                "with appropriate sensitivity, asking relevant follow-up questions "
+                "about diabetic health status, and explaining the procedure with "
+                "consideration of diabetes-related wound healing risks."
+            )
+
         system_prompt = (
             "You are a nursing communication evaluator for history-taking.\n\n"
             "REFERENCE COMMUNICATION GUIDELINES:\n"
@@ -66,6 +82,7 @@ class CommunicationAgent(BaseAgent):
             "- Empathy and listening\n"
             "- Patient-centered approach\n\n"
             "Do NOT evaluate clinical knowledge.\n\n"
+            f"{clinical_context_note}"
             "You MUST return a valid JSON object only. No markdown, no explanation, "
             "no code fences. Nothing before or after the JSON.\n\n"
             "Required JSON format:\n"

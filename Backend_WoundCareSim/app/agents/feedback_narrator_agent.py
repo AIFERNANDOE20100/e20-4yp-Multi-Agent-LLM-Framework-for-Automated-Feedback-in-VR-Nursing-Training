@@ -22,7 +22,8 @@ class FeedbackNarratorAgent(BaseAgent):
         self,
         raw_feedback: List[Dict[str, Any]],
         step: str,
-        score: Optional[int] = None
+        score: Optional[int] = None,
+        clinical_context: dict = None,
     ) -> NarratedFeedback:
         """
         Generate narrated feedback paragraph from raw agent outputs.
@@ -36,7 +37,7 @@ class FeedbackNarratorAgent(BaseAgent):
             NarratedFeedback with single student-facing paragraph
         """
 
-        system_prompt = self._build_system_prompt(step)
+        system_prompt = self._build_system_prompt(step, clinical_context=clinical_context)
         user_prompt = self._build_user_prompt(raw_feedback, step, score=score)
 
         output_text = await self.run(
@@ -51,8 +52,29 @@ class FeedbackNarratorAgent(BaseAgent):
     # Prompt construction
     # --------------------------------------------------
 
-    def _build_system_prompt(self, step: str) -> str:
+    def _build_system_prompt(self, step: str, clinical_context: dict = None) -> str:
         """Build system prompt with step-specific guidance."""
+        clinical_context = clinical_context or {}
+        risk_factors = clinical_context.get("risk_factors", [])
+        healing_risk = clinical_context.get("healing_risk", "normal")
+        infection_risk = clinical_context.get("infection_risk", "normal")
+        has_diabetes = "diabetes" in risk_factors
+
+        clinical_context_block = ""
+        if has_diabetes:
+            clinical_context_block = f"""
+PATIENT CLINICAL CONTEXT:
+Risk Factors: Type 2 Diabetes Mellitus
+Healing Risk: {healing_risk.replace("_", " ").title()}
+Infection Risk: {infection_risk.replace("_", " ").title()}
+
+When generating feedback:
+- Explain how diabetes increases infection risk and delays wound healing
+- Highlight why thorough history taking is especially important for this patient
+- If the student asked about diabetic risk factors, acknowledge this positively
+- If the student did not ask about diabetic risk factors, mention this as an
+  important area for improvement given the patient's condition
+"""
         
         step_context = {
             "history": "patient communication and information gathering",
@@ -83,7 +105,7 @@ RULES:
 8. Do NOT contradict the feedback provided
 9. Be specific but concise
 
-STRUCTURE:
+{clinical_context_block}STRUCTURE:
 - Opening: Acknowledge what student did well (if applicable)
 - Middle: Mention key areas for improvement (if applicable)
 - Closing: Encouraging statement about learning/next steps

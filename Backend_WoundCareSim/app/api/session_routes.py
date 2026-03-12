@@ -291,7 +291,8 @@ async def _handle_verification_as_action(
     staff_nurse = StaffNurseAgent()
     verdict = await staff_nurse.verify_material_conversational(
         student_message=student_message,
-        material_type=material_type
+        material_type=material_type,
+        clinical_context=session.get("clinical_context", {}),
     )
 
     # verdict = {"status": "incomplete" | "rejected" | "approved", "message": "..."}
@@ -312,7 +313,8 @@ async def _handle_verification_as_action(
         real_time_feedback = await clinical_agent.get_real_time_feedback(
             action_type=action_type,
             performed_actions=performed_actions,
-            rag_guidelines=rag_guidelines
+            rag_guidelines=rag_guidelines,
+            clinical_context=session.get("clinical_context", {}),
         )
         result = action_event_service.record_action(
             session_id=session_id,
@@ -389,18 +391,22 @@ async def complete_step(payload: CompleteStepInput):
             step=current_step,
         )
 
+        clinical_context = session.get("clinical_context", {})
+
         evaluator_outputs = [
             await communication_agent.evaluate(
                 current_step=current_step,
                 student_input=context["transcript"],
                 scenario_metadata=context["scenario_metadata"],
                 rag_response=context["rag_context"],
+                clinical_context=clinical_context,
             ),
             await knowledge_agent.evaluate(
                 current_step=current_step,
                 student_input=context["transcript"],
                 scenario_metadata=context["scenario_metadata"],
                 rag_response=context["rag_context"],
+                clinical_context=clinical_context,
             ),
         ]
 

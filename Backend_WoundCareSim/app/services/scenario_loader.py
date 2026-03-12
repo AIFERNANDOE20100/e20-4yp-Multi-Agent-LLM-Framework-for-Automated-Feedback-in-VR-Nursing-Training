@@ -20,5 +20,6 @@ def load_scenario(scenario_id: str) -> Dict:
         "conversation_points": scenario.get("required_conversation_points", []),
         "assessment_questions": scenario["assessment_questions"],
         "evaluation_criteria": scenario.get("evaluation_criteria", {}),
-        "vector_namespace": scenario["vector_store_namespace"]
+        "vector_namespace": scenario["vector_store_namespace"],
+        "clinical_context": scenario.get("clinical_context", {})
     }

@@ -446,6 +446,7 @@ class StudentLogService:
             "last_updated_at":    updated_at,
             "duration_seconds":   duration_seconds,
             "final_step_reached": session.get("current_step"),
+            "clinical_context":   session.get("clinical_context", {}),
         }
 
     # ---- HISTORY ---------------------------------------------------------

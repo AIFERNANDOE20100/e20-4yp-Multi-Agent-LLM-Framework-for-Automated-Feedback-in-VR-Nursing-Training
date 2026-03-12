@@ -106,6 +106,7 @@ class ClinicalAgent(BaseAgent):
         action_type: str,
         performed_actions: list[dict],
         rag_guidelines: str = "",
+        clinical_context: dict = None,
         **_: object,
     ) -> dict:
         """
@@ -145,6 +146,7 @@ class ClinicalAgent(BaseAgent):
             action_name=action_name,
             missing_names=missing_names,
             rag_guidelines=rag_guidelines,
+            clinical_context=clinical_context or {},
         )
 
         return {
@@ -164,6 +166,7 @@ class ClinicalAgent(BaseAgent):
         self,
         action_events: list[dict],
         rag_guidelines: str = "",
+        clinical_context: dict = None,
     ) -> str:
         """
         LLM narrates what the student did and what they missed.
@@ -180,6 +183,18 @@ class ClinicalAgent(BaseAgent):
         performed_names = [self._name(a) for a in performed]
         skipped_names = [self._name(a) for a in skipped]
 
+        clinical_context = clinical_context or {}
+        risk_factors = clinical_context.get("risk_factors", [])
+        has_diabetes = "diabetes" in risk_factors
+
+        diabetes_note = ""
+        if has_diabetes:
+            diabetes_note = (
+                "\nPATIENT CONTEXT: This patient has Type 2 Diabetes. "
+                "Where relevant, explain how missed actions carry higher risk "
+                "for diabetic patients due to impaired healing and infection susceptibility."
+            )
+
         system_prompt = (
             "You are a nursing clinical educator providing end-of-step feedback.\n\n"
             "You are given a factual log of what a student did and did not do "
@@ -192,6 +207,7 @@ class ClinicalAgent(BaseAgent):
             "Base your explanation on the clinical guidelines provided.\n"
             "Do NOT invent actions not in the log. Do NOT evaluate clinical judgment.\n"
             "Keep it brief and spoken-friendly."
+            f"{diabetes_note}"
         )
 
         performed_str = (
@@ -238,17 +254,31 @@ class ClinicalAgent(BaseAgent):
         action_name: str,
         missing_names: list[str],
         rag_guidelines: str,
+        clinical_context: dict = None,
     ) -> str:
         """
         Generate a short clinical explanation of WHY the missing steps matter.
         Called only when prerequisites are missing — verdict is already locked.
         """
 
+        clinical_context = clinical_context or {}
+        risk_factors = clinical_context.get("risk_factors", [])
+        has_diabetes = "diabetes" in risk_factors
+
+        patient_context_note = ""
+        if has_diabetes:
+            patient_context_note = (
+                "\nPATIENT CONTEXT: This patient has Type 2 Diabetes Mellitus. "
+                "Diabetic patients have impaired immune response and delayed wound healing. "
+                "Explain why the missing step is especially critical for this patient's safety."
+            )
+
         system_prompt = (
             "You are a nursing clinical educator giving real-time feedback.\n\n"
             "A student attempted an action before completing required prerequisites.\n"
             "The verdict is already determined — you are only explaining WHY "
             "the missing steps are clinically important.\n\n"
+            f"{patient_context_note}\n\n"
             "Rules:\n"
             "- Start by stating what is missing: 'Before [action], you must first: [missing steps].'\n"
             "- Then give ONE brief sentence explaining the patient safety reason.\n"

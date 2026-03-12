@@ -233,6 +233,7 @@ async def websocket_endpoint(session_id: str, websocket: WebSocket):
                     student_input=student_message,
                     current_step=current_step,
                     next_step=None,
+                    clinical_context=session.get("clinical_context", {}),
                 )
                 await _send_server_event(websocket, "nurse_message", {"text": response, "role": "nurse"})
                 await _send_tts_event(websocket, await _safe_tts(response, role="staff_nurse"), "nurse")
@@ -308,6 +309,7 @@ async def websocket_endpoint(session_id: str, websocket: WebSocket):
                         action_type=action_type,
                         performed_actions=performed_actions,
                         rag_guidelines=rag_guidelines,
+                        clinical_context=session.get("clinical_context", {}),
                     )
                     action_event_service.record_action(
                         session_id=session_id,
@@ -398,18 +400,22 @@ async def websocket_endpoint(session_id: str, websocket: WebSocket):
                         step=current_step,
                     )
 
+                    clinical_context = session.get("clinical_context", {})
+
                     evaluator_outputs = [
                         await communication_agent.evaluate(
                             current_step=current_step,
                             student_input=context["transcript"],
                             scenario_metadata=context["scenario_metadata"],
                             rag_response=context["rag_context"],
+                            clinical_context=clinical_context,
                         ),
                         await knowledge_agent.evaluate(
                             current_step=current_step,
                             student_input=context["transcript"],
                             scenario_metadata=context["scenario_metadata"],
                             rag_response=context["rag_context"],
+                            clinical_context=clinical_context,
                         ),
                     ]
 

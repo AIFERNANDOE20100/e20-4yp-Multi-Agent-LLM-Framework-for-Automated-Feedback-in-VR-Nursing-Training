@@ -33,6 +33,8 @@ class SessionManager:
         if scenario_metadata is None:
             scenario_metadata = load_scenario(scenario_id)
 
+        clinical_context = scenario_metadata.get("clinical_context", {})
+
         self.sessions[session_id] = {
             "scenario_id": scenario_id,
             "student_id": student_id,
@@ -40,6 +42,7 @@ class SessionManager:
             "current_step": Step.HISTORY.value,
             "last_evaluation": None,
             "scenario_metadata": scenario_metadata,
+            "clinical_context": clinical_context,
             "logs": [],
             "rag_results": [],
             "action_events": [],

@@ -44,6 +44,7 @@ class EvaluationService:
             raise ValueError("Session not found")
 
         scenario_metadata = session["scenario_metadata"]
+        clinical_context = session.get("clinical_context", {})
 
         transcript = ""
         action_events: List[Dict[str, Any]] = []
@@ -57,9 +58,14 @@ class EvaluationService:
         elif step == Step.CLEANING_AND_DRESSING.value:
             action_events = session.get("action_events", [])
 
+        risk_factors = clinical_context.get("risk_factors", [])
+
+        history_query = "patient history taking guidelines nursing communication assessment questions"
+        if "diabetes" in risk_factors:
+            history_query += " diabetic patient wound healing infection risk comorbidities"
+
         rag_query_map = {
-            Step.HISTORY.value:
-                "patient history taking guidelines nursing communication assessment questions",
+            Step.HISTORY.value: history_query,
             Step.CLEANING_AND_DRESSING.value:
                 "wound cleaning and dressing preparation procedure protocol hand hygiene aseptic technique",
         }
@@ -77,7 +83,8 @@ class EvaluationService:
             "scenario_metadata": scenario_metadata,
             "transcript": transcript,
             "action_events": action_events,
-            "rag_context": rag_context
+            "rag_context": rag_context,
+            "clinical_context": session.get("clinical_context", {})
         }
 
     # ------------------------------------------------
@@ -96,6 +103,7 @@ class EvaluationService:
             raise ValueError("Session not found")
 
         current_step = Step(session["current_step"])
+        clinical_context = session.get("clinical_context", {})
 
         # ------------------------------------------------
         # CLEANING_AND_DRESSING → No Final Evaluation
@@ -159,7 +167,8 @@ class EvaluationService:
         # Deterministic scoring (NEW)
         scores = aggregate_scores(
             evaluations=evaluator_outputs,
-            current_step=current_step.value
+            current_step=current_step.value,
+            clinical_context=clinical_context,
         )
 
         # ----------------------------------------------
@@ -207,7 +216,8 @@ class EvaluationService:
                 narrated_feedback_obj = await self.feedback_narrator_agent.narrate(
                     raw_feedback=raw_feedback_items,
                     step=current_step.value,
-                    score=score_percentage
+                    score=score_percentage,
+                    clinical_context=clinical_context,
                 )
                 if narrated_feedback_obj:
                     narrated_feedback_dict = narrated_feedback_obj.model_dump()

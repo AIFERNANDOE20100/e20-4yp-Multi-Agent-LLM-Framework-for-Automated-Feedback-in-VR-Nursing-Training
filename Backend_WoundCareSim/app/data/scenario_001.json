@@ -9,8 +9,7 @@
     "address": "No. 45, Kandy Road, Hindagala, Kandy",
 
     "medical_history": [
-      "Hypertension",
-      "Type 2 Diabetes (controlled with medication)"
+      "Hypertension"
     ],
 
     "allergies": [
@@ -19,8 +18,7 @@
     ],
 
     "current_medications": [
-      "Amlodipine 5mg daily (for hypertension)",
-      "Metformin 500mg twice daily (for diabetes)"
+      "Amlodipine 5mg daily (for hypertension)"
     ],
 
     "surgery_details": {
