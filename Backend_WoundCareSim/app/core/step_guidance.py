@@ -1,13 +1,11 @@
 STEP_GUIDANCE = {
     "history": (
-        "In this step, you should talk with the patient and ask questions to obtain their history."
+        "Start by introducing yourself to the patient and asking about their complaint."
     ),
     "assessment": (
-        "In this step, you should assess the wound by answering the provided multiple-choice questions."
+        "Look at the wound and answer the multiple-choice questions on your screen."
     ),
     "cleaning_and_dressing": (
-        "In this step, you should prepare the dressing trolley, cleaning solution, and sterile materials. "
-        "This includes hand hygiene, trolley cleaning, selecting materials, and verifying them with the staff nurse. "
-        "You will NOT perform actual wound cleaning or dressing in this step - this is preparation only."
+        "Begin with hand hygiene, then clean the trolley and gather your materials."
     )
 }

@@ -11,10 +11,11 @@ from app.core.config import (
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
+
 class BaseAgent(ABC):
     """
     Base class for all evaluator agents.
-    Uses the 'Responses API' (client.responses.create).
+    Uses the OpenAI Responses API (client.responses.create).
     """
 
     def __init__(self):
@@ -29,11 +30,16 @@ class BaseAgent(ABC):
     ) -> str:
         """
         Executes an OpenAI Responses API call and safely extracts text.
+        Handles model compatibility (GPT-5 models do not support temperature).
         """
+
         try:
-            response = await self.client.responses.create(
-                model=self.model,
-                input=[
+            # -------------------------------
+            # Build request parameters safely
+            # -------------------------------
+            request_params = {
+                "model": self.model,
+                "input": [
                     {
                         "role": "system",
                         "content": system_prompt,
@@ -43,31 +49,38 @@ class BaseAgent(ABC):
                         "content": user_prompt,
                     },
                 ],
-                temperature=temperature,
-            )
+            }
 
-            # --- PARSING LOGIC FIX ---
+            # GPT-5 models do NOT support temperature
+            if not self.model.startswith("gpt-5"):
+                request_params["temperature"] = temperature
+
+            # -------------------------------
+            # Execute OpenAI call
+            # -------------------------------
+            response = await self.client.responses.create(**request_params)
+
+            # -------------------------------
+            # Parse response text safely
+            # -------------------------------
             output_text = ""
 
-            # The Responses API returns a list of output items
-            if hasattr(response, 'output'):
+            if hasattr(response, "output"):
                 for item in response.output:
-                    # We are looking for items of type 'message'
-                    if getattr(item, 'type', None) == "message":
-                        if hasattr(item, 'content'):
+                    # We are looking for message outputs
+                    if getattr(item, "type", None) == "message":
+                        if hasattr(item, "content"):
                             for content_part in item.content:
-                                # CHECK TYPE: It is often "output_text", not just "text"
-                                c_type = getattr(content_part, 'type', "")
-                                
+                                c_type = getattr(content_part, "type", "")
+
                                 if c_type in ["text", "output_text"]:
-                                    text_val = getattr(content_part, 'text', "")
+                                    text_val = getattr(content_part, "text", "")
                                     if text_val:
                                         output_text += text_val
 
             output_text = output_text.strip()
 
             if not output_text:
-                # Debugging help: print what we actually got if empty
                 logger.error(f"Raw Response Output: {response.output}")
                 raise ValueError("OpenAI returned empty content after parsing.")
 
@@ -75,5 +88,6 @@ class BaseAgent(ABC):
 
         except Exception as e:
             logger.error(f"LLM Responses API Call Failed: {e}")
-            # Return empty JSON to prevent crash, but log the error
+
+            # Return empty JSON string so agents do not crash
             return "{}"
