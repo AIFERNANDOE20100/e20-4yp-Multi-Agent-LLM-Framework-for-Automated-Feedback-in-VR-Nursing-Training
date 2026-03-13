@@ -1,1161 +1,698 @@
-// Configuration
-const API_BASE_URL = 'http://127.0.0.1:8000';
-const WS_BASE_URL = 'ws://127.0.0.1:8000';
-
-// Global State
-let currentSession = {
-    sessionId: null,
-    scenarioId: null,
-    currentStep: null,
-    nextStep: null,
-    scenarioMetadata: null,
-    mcqQuestions: [],
-    actionCounter: 0,
-    sessionToken: null,
-    ws: null,
-    wsConnected: false,
-    lastReceivedEvent: '-',
-    awaitingStepCompletion: false,
-    feedbackRenderedForPendingStep: false,
-    deferredNextStep: null
+const HISTORY_SCRIPTS = {
+    focused_history: [
+        "Hello, I am here to ask a few questions before wound care.",
+        "Can you tell me your name and age?",
+        "Do you have any allergies?",
+        "What surgery did you have and when was it done?",
+        "Are you having any pain at the moment?"
+    ],
+    short_history: [
+        "What procedure did you have?",
+        "Do you have any allergies?",
+        "How is your pain right now?"
+    ]
 };
 
-let mediaRecorder = null;
-let recordedChunks = [];
-let isRecording = false;
-let mediaStream = null;
-let activeRecordingTarget = null;
-let pendingTranscriptionHandler = null;
-
-// ==========================================
-// Utility Functions
-// ==========================================
-
-function showLoading() {
-    document.getElementById('loadingSpinner').style.display = 'flex';
-}
-
-function hideLoading() {
-    document.getElementById('loadingSpinner').style.display = 'none';
-}
-
-function showScreen(screenId) {
-    // Hide all screens
-    const screens = document.querySelectorAll('.screen');
-    screens.forEach(screen => screen.style.display = 'none');
-    
-    // Show requested screen
-    document.getElementById(screenId).style.display = 'block';
-}
-
-function showError(message) {
-    alert('Error: ' + message);
-}
-
-function handleEnter(event, callback) {
-    if (event.key === 'Enter') {
-        callback();
+const PROCEDURE_ACTIONS = [
+    {
+        code: "hand_hygiene_initial",
+        label: "Initial Hand Hygiene",
+        backendActionType: "action_initial_hand_hygiene"
+    },
+    {
+        code: "clean_trolley",
+        label: "Clean Trolley",
+        backendActionType: "action_clean_trolley"
+    },
+    {
+        code: "hand_hygiene_again",
+        label: "Hand Hygiene Again",
+        backendActionType: "action_hand_hygiene_after_cleaning"
+    },
+    {
+        code: "select_solution",
+        label: "Select Solution",
+        backendActionType: "action_select_solution"
+    },
+    {
+        code: "verify_solution",
+        label: "Verify Solution",
+        backendActionType: "action_verify_solution"
+    },
+    {
+        code: "select_dressing",
+        label: "Select Dressing",
+        backendActionType: "action_select_dressing"
+    },
+    {
+        code: "verify_dressing",
+        label: "Verify Dressing",
+        backendActionType: "action_verify_dressing"
+    },
+    {
+        code: "arrange_materials",
+        label: "Arrange Materials",
+        backendActionType: "action_arrange_materials"
+    },
+    {
+        code: "bring_trolley",
+        label: "Bring Trolley",
+        backendActionType: "action_bring_trolley"
     }
+];
+
+const state = {
+    apiBaseUrl: "http://127.0.0.1:8000",
+    wsBaseUrl: "ws://127.0.0.1:8000",
+    activeSession: null,
+    sessionInfo: null,
+    ws: null,
+    wsConnected: false,
+    logEntries: [],
+    lastStructuredResponse: null,
+    currentStep: null,
+    selectedMcqAnswers: {},
+    completedActions: new Set(),
+    patientMessages: [],
+    nurseMessages: [],
+    historyTransitionPendingConfirmation: false,
+    autoPollHandle: null,
+    scriptRunning: false
+};
+
+function qs(id) {
+    return document.getElementById(id);
 }
 
-function updateRecordingUI(recording, buttonId, statusId, labelText) {
-    const recordButton = document.getElementById(buttonId);
-    const status = document.getElementById(statusId);
-    if (!recordButton || !status) return;
-    if (recording) {
-        recordButton.classList.add('recording');
-        recordButton.textContent = '⏹️ Stop Recording';
-        status.textContent = 'Recording...';
-    } else {
-        recordButton.classList.remove('recording');
-        recordButton.textContent = labelText;
-        status.textContent = 'Not recording';
-    }
+function sanitizeHtml(value) {
+    return String(value ?? "")
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#39;");
 }
 
-function playAudioFromBase64(audioBase64, contentType = 'audio/mpeg') {
-    if (!audioBase64) return Promise.resolve();
-    const audio = new Audio(`data:${contentType};base64,${audioBase64}`);
-    return new Promise(resolve => {
-        audio.onended = resolve;
-        audio.onerror = resolve;
-
-        audio.play().catch(error => {
-            console.error('Audio playback failed:', error);
-            resolve();
-        });
-    });
+function sleep(ms) {
+    return new Promise(resolve => setTimeout(resolve, ms));
 }
 
-async function apiCall(endpoint, method = 'GET', body = null) {
-    showLoading();
-    try {
-        const options = {
-            method,
-            headers: {
-                'Content-Type': 'application/json'
-            }
-        };
-        
-        if (body) {
-            options.body = JSON.stringify(body);
+function getApiBaseUrl() {
+    return qs("apiBaseUrl").value.trim().replace(/\/$/, "");
+}
+
+function getWsBaseUrl() {
+    return qs("wsBaseUrl").value.trim().replace(/\/$/, "");
+}
+
+async function apiCall(path) {
+    const response = await fetch(`${state.apiBaseUrl}${path}`);
+    if (!response.ok) {
+        let detail = response.statusText;
+        try {
+            const data = await response.json();
+            detail = data.detail || JSON.stringify(data);
+        } catch (error) {
+            detail = response.statusText;
         }
-        
-        const response = await fetch(`${API_BASE_URL}${endpoint}`, options);
-        
-        if (!response.ok) {
-            const error = await response.json();
-            throw new Error(error.detail || 'API request failed');
-        }
-        
-        return await response.json();
-    } catch (error) {
-        console.error('API Error:', error);
-        showError(error.message);
-        throw error;
-    } finally {
-        hideLoading();
+        throw new Error(detail);
     }
+    return response.json();
 }
 
-// ==========================================
-// Session Management
-// ==========================================
-
-function updateDebugPanel() {
-    const statusEl = document.getElementById('wsStatus');
-    const sentEl = document.getElementById('lastSentEvent');
-    const receivedEl = document.getElementById('lastReceivedEvent');
-    if (!statusEl || !sentEl || !receivedEl) return;
-
-    statusEl.textContent = currentSession.wsConnected ? 'Connected' : 'Disconnected';
-    statusEl.className = currentSession.wsConnected ? 'debug-value connected' : 'debug-value disconnected';
-    sentEl.textContent = '-';
-    receivedEl.textContent = currentSession.lastReceivedEvent || '-';
+function setStructuredResponse(payload) {
+    state.lastStructuredResponse = payload;
+    qs("structuredResponse").textContent = JSON.stringify(payload, null, 2);
+    qs("structuredResponse").classList.remove("empty-state");
 }
 
-function getWebSocket() {
-    if (currentSession.ws && currentSession.ws.readyState === WebSocket.OPEN) {
-        return currentSession.ws;
-    }
-    return null;
-}
-
-
-function moveToNextStep(nextStep) {
-    currentSession.nextStep = nextStep;
-    continueToNextStep();
-}
-
-function markFeedbackRendered() {
-    if (!currentSession.awaitingStepCompletion) return;
-
-    currentSession.feedbackRenderedForPendingStep = true;
-    if (currentSession.currentStep === 'history') {
-        return;
-    }
-
-    if (currentSession.deferredNextStep) {
-        const nextStep = currentSession.deferredNextStep;
-        currentSession.awaitingStepCompletion = false;
-        currentSession.feedbackRenderedForPendingStep = false;
-        currentSession.deferredNextStep = null;
-        moveToNextStep(nextStep);
-    }
-}
-
-function handleTranscription(data) {
-    const transcript = (data.text || '').trim();
-    if (!transcript) return;
-
-    const patientInput = document.getElementById('patientQuestion');
-    const nurseInput = document.getElementById(getStaffNurseInputId());
-
-    if (activeRecordingTarget?.targetType === 'patient' && patientInput) {
-        patientInput.value = transcript;
-    } else if (nurseInput) {
-        nurseInput.value = transcript;
-    }
-
-    if (data.is_final && typeof pendingTranscriptionHandler === 'function') {
-        pendingTranscriptionHandler(transcript);
-        pendingTranscriptionHandler = null;
-    }
-}
-
-function playAudio(base64Audio) {
-    if (!base64Audio) return Promise.resolve();
-    const byteCharacters = atob(base64Audio);
-    const byteNumbers = new Array(byteCharacters.length);
-
-    for (let i = 0; i < byteCharacters.length; i++) {
-        byteNumbers[i] = byteCharacters.charCodeAt(i);
-    }
-
-    const byteArray = new Uint8Array(byteNumbers);
-    const blob = new Blob([byteArray], { type: 'audio/wav' });
-    const audioUrl = URL.createObjectURL(blob);
-
-    const audio = new Audio(audioUrl);
-    return new Promise(resolve => {
-        audio.onended = resolve;
-        audio.onerror = resolve;
-        audio.play().catch((error) => {
-            console.error('WebSocket audio playback failed:', error);
-            resolve();
-        }).finally(() => {
-            setTimeout(() => URL.revokeObjectURL(audioUrl), 1000);
-        });
+function appendLog(direction, payload, label) {
+    const timestamp = new Date().toLocaleTimeString();
+    state.logEntries.push({
+        timestamp,
+        direction,
+        label,
+        payload
     });
-}
 
-function displayNurseMessage(text) {
-    const responseId = getStaffNurseResponseId();
-    const responseDiv = document.getElementById(responseId);
-    if (!responseDiv) return;
-    responseDiv.innerHTML = `
-        <strong>Staff Nurse:</strong>
-        <p>${text}</p>
+    const consoleEl = qs("logConsole");
+    if (consoleEl.querySelector(".empty-state")) {
+        consoleEl.innerHTML = "";
+    }
+
+    const entry = document.createElement("div");
+    entry.className = `log-entry ${direction}`;
+    entry.innerHTML = `
+        <div class="log-meta">${sanitizeHtml(timestamp)} | ${sanitizeHtml(direction.toUpperCase())} | ${sanitizeHtml(label)}</div>
+        <div>${sanitizeHtml(JSON.stringify(payload, null, 2))}</div>
     `;
+    consoleEl.prepend(entry);
 }
 
-function handleServerEvent(message) {
-    if (message.type === 'error') {
-        currentSession.lastReceivedEvent = `error: ${message.message}`;
-        updateDebugPanel();
-        console.error('WebSocket error event:', message.message);
+function updateConnectionUi() {
+    qs("wsStatus").textContent = state.wsConnected ? "Connected" : "Disconnected";
+    qs("wsStatus").className = `status-value ${state.wsConnected ? "connected" : "disconnected"}`;
+    qs("connectSessionBtn").disabled = state.wsConnected || !state.activeSession?.session_id;
+    qs("disconnectSessionBtn").disabled = !state.wsConnected;
+}
+
+function updateSessionStrip() {
+    const active = state.activeSession;
+    const info = state.sessionInfo;
+
+    qs("sessionId").textContent = active?.session_id || info?.session_id || "-";
+    qs("sessionToken").textContent = active?.session_token || info?.session_token || "-";
+    qs("scenarioId").textContent = active?.scenario_id || info?.scenario_id || "-";
+    qs("currentStep").textContent = state.currentStep || info?.current_step || "-";
+}
+
+function renderActiveSessionStatus(message) {
+    qs("activeSessionStatus").textContent = message;
+}
+
+function setPanelState(step) {
+    const steps = ["history", "assessment", "cleaning_and_dressing"];
+    const mapping = {
+        history: "historyStepState",
+        assessment: "assessmentStepState",
+        cleaning_and_dressing: "cleaningStepState"
+    };
+
+    steps.forEach(item => {
+        const el = qs(mapping[item]);
+        const isActive = step === item;
+        el.textContent = isActive ? "Active" : "Inactive";
+        el.className = `panel-step${isActive ? " active" : ""}`;
+    });
+
+    qs("historyPanel").style.opacity = step && step !== "history" ? "0.78" : "1";
+    qs("assessmentPanel").style.opacity = step && step !== "assessment" ? "0.78" : "1";
+    qs("cleaningPanel").style.opacity = step && step !== "cleaning_and_dressing" ? "0.78" : "1";
+}
+
+function renderMessageStream(containerId, items, roleLabel) {
+    const container = qs(containerId);
+    if (!items.length) {
+        container.innerHTML = `<div class="empty-state">No ${sanitizeHtml(roleLabel)} yet.</div>`;
         return;
     }
 
-    const eventName = message.event || message.type || 'unknown';
-    currentSession.lastReceivedEvent = eventName;
-    updateDebugPanel();
+    container.innerHTML = items.map(item => `
+        <div class="message-item">
+            <div class="message-role">${sanitizeHtml(item.role)}</div>
+            <div>${sanitizeHtml(item.text)}</div>
+        </div>
+    `).join("");
+}
 
-    switch (message.event) {
-        case 'transcription_result':
-            handleTranscription(message.data || {});
-            break;
-        case 'tts_audio':
-            enqueueWebSocketAudio((message.data || {}).audio_bytes);
-            break;
-        case 'real_time_feedback':
-            displayRealtimeFeedback(message.data || {});
-            break;
-        case 'nurse_message':
-            if ((message.data || {}).text) {
-                const role = (message.data || {}).role;
-                if (role === 'patient') {
-                    addMessageToConversation('patient', message.data.text);
-                } else {
-                    displayNurseMessage(message.data.text);
-                }
-            }
-            break;
-        case 'mcq_answer_result': {
-            const data = message.data || {};
-            const questionId = data.question_id;
-            if (!questionId) {
-                break;
-            }
-            const statusBadge = document.getElementById(`status-${questionId}`);
-            const feedbackDiv = document.getElementById(`feedback-${questionId}`);
-            const optionsDiv = document.getElementById(`options-${questionId}`);
-            if (statusBadge) {
-                statusBadge.style.display = 'inline-block';
-                statusBadge.className = `mcq-status ${data.status}`;
-                statusBadge.textContent = data.is_correct ? '✓ Correct' : '✗ Incorrect';
-            }
-            if (feedbackDiv) {
-                feedbackDiv.style.display = 'block';
-                feedbackDiv.className = `mcq-feedback ${data.status}`;
-                feedbackDiv.innerHTML = `<strong>Explanation:</strong> ${data.explanation}`;
-            }
-            if (optionsDiv) {
-                optionsDiv.style.pointerEvents = 'none';
-                optionsDiv.style.opacity = '0.6';
-            }
-            if (data.feedback_audio && data.feedback_audio.audio_base64) {
-                playAudioFromBase64(data.feedback_audio.audio_base64, data.feedback_audio.content_type);
-            }
-            break;
-        }
-        case 'final_feedback':
-            displayHistoryFeedback(message.data || {}, null);
-            markFeedbackRendered();
-            break;
-        case 'assessment_summary':
-            displayAssessmentResults(
-                (message.data || {}).mcq_result,
-                null,
-                (message.data || {}).summary_text
+function renderStructuredBox(containerId, payload) {
+    const container = qs(containerId);
+    if (!payload) {
+        container.innerHTML = '<div class="empty-state">No data yet.</div>';
+        return;
+    }
+
+    const rows = Object.entries(payload).map(([key, value]) => `
+        <div class="feedback-item">
+            <div class="feedback-key">${sanitizeHtml(key)}</div>
+            <div>${sanitizeHtml(typeof value === "object" ? JSON.stringify(value, null, 2) : String(value))}</div>
+        </div>
+    `).join("");
+
+    container.innerHTML = rows;
+}
+
+function renderMcqs() {
+    const container = qs("mcqContainer");
+    const questions = state.sessionInfo?.scenario_metadata?.assessment_questions || [];
+
+    if (!questions.length) {
+        container.innerHTML = '<div class="empty-state">No assessment questions available.</div>';
+        return;
+    }
+
+    container.innerHTML = questions.map((question, index) => {
+        const selected = state.selectedMcqAnswers[question.id]?.answer;
+        const result = state.selectedMcqAnswers[question.id]?.result;
+        const cardClass = result?.status || "";
+
+        return `
+            <div class="mcq-card ${sanitizeHtml(cardClass)}" id="mcq-${sanitizeHtml(question.id)}">
+                <p class="mcq-question">${index + 1}. ${sanitizeHtml(question.question)}</p>
+                <div class="mcq-options">
+                    ${question.options.map(option => `
+                        <button
+                            class="mcq-option ${selected === option ? "selected" : ""}"
+                            data-question-id="${sanitizeHtml(question.id)}"
+                            data-answer="${sanitizeHtml(option)}"
+                        >
+                            ${sanitizeHtml(option)}
+                        </button>
+                    `).join("")}
+                </div>
+                <div class="mcq-feedback">
+                    ${result ? `
+                        <strong>${result.is_correct ? "Correct" : "Incorrect"}.</strong>
+                        ${sanitizeHtml(result.explanation || "")}
+                    ` : "Awaiting answer."}
+                </div>
+            </div>
+        `;
+    }).join("");
+
+    container.querySelectorAll(".mcq-option").forEach(button => {
+        button.addEventListener("click", () => {
+            submitMcqAnswer(button.dataset.questionId, button.dataset.answer);
+        });
+    });
+}
+
+function renderActionButtons() {
+    const container = qs("actionGrid");
+    container.innerHTML = PROCEDURE_ACTIONS.map(action => {
+        const completed = state.completedActions.has(action.backendActionType);
+        return `
+            <button
+                class="action-button active-step ${completed ? "completed" : ""}"
+                data-action-code="${sanitizeHtml(action.code)}"
+                data-action-type="${sanitizeHtml(action.backendActionType)}"
+            >
+                <strong>${sanitizeHtml(action.label)}</strong>
+                <span class="action-code">${sanitizeHtml(action.code)}</span>
+            </button>
+        `;
+    }).join("");
+
+    container.querySelectorAll(".action-button").forEach(button => {
+        button.addEventListener("click", () => {
+            submitAction(button.dataset.actionCode, button.dataset.actionType);
+        });
+    });
+}
+
+async function refreshActiveSession() {
+    state.apiBaseUrl = getApiBaseUrl();
+    state.wsBaseUrl = getWsBaseUrl();
+
+    try {
+        const active = await apiCall("/session/active");
+        state.activeSession = active?.session_id ? active : null;
+        if (state.activeSession) {
+            renderActiveSessionStatus(
+                `Active session found: ${state.activeSession.session_id} for scenario ${state.activeSession.scenario_id}.`
             );
-            markFeedbackRendered();
-            break;
-        case 'step_complete': {
-            const nextStep = (message.data || {}).next_step;
-            if (!currentSession.awaitingStepCompletion) {
-                moveToNextStep(nextStep);
-                break;
-            }
-
-            const pendingStep = currentSession.currentStep;
-            const requiresFeedback = pendingStep === 'history'
-                || pendingStep === 'assessment';
-            if (requiresFeedback && !currentSession.feedbackRenderedForPendingStep) {
-                currentSession.deferredNextStep = nextStep;
-                break;
-            }
-
-            currentSession.awaitingStepCompletion = false;
-            currentSession.feedbackRenderedForPendingStep = false;
-            currentSession.deferredNextStep = null;
-            moveToNextStep(nextStep);
-            break;
+        } else {
+            renderActiveSessionStatus("No active session. Waiting for Teacher Portal to start one.");
         }
-        case 'session_end':
-            showCompletionScreen();
-            break;
-        default:
-            break;
+        updateSessionStrip();
+        updateConnectionUi();
+    } catch (error) {
+        renderActiveSessionStatus(`Failed to check active session: ${error.message}`);
+        appendLog("error", { message: error.message }, "active_session_error");
     }
 }
 
-function sendWsEvent(event, data) {
-    const ws = getWebSocket();
-    if (!ws) return false;
+async function refreshSessionDetails() {
+    const sessionId = state.activeSession?.session_id || state.sessionInfo?.session_id;
+    if (!sessionId) {
+        return;
+    }
+
+    try {
+        const info = await apiCall(`/session/${sessionId}`);
+        state.sessionInfo = info;
+        state.currentStep = info.current_step;
+        updateSessionStrip();
+        setPanelState(state.currentStep);
+        renderMcqs();
+        renderActionButtons();
+    } catch (error) {
+        appendLog("error", { message: error.message }, "session_info_error");
+    }
+}
+
+function connectToActiveSession() {
+    const active = state.activeSession;
+    if (!active?.session_id || !active?.session_token) {
+        renderActiveSessionStatus("No connectable active session found.");
+        return;
+    }
+
+    if (state.ws && [WebSocket.OPEN, WebSocket.CONNECTING].includes(state.ws.readyState)) {
+        return;
+    }
+
+    const wsUrl = `${state.wsBaseUrl}/ws/session/${encodeURIComponent(active.session_id)}?token=${encodeURIComponent(active.session_token)}`;
+    state.ws = new WebSocket(wsUrl);
+
+    state.ws.onopen = async () => {
+        state.wsConnected = true;
+        updateConnectionUi();
+        appendLog("received", { message: "socket_open" }, "socket_open");
+        await refreshSessionDetails();
+    };
+
+    state.ws.onmessage = async event => {
+        try {
+            const payload = JSON.parse(event.data);
+            appendLog("received", payload, payload.event || payload.type || "message");
+            setStructuredResponse(payload);
+            await handleServerMessage(payload);
+        } catch (error) {
+            appendLog("error", { message: error.message }, "parse_error");
+        }
+    };
+
+    state.ws.onerror = () => {
+        appendLog("error", { message: "WebSocket error" }, "socket_error");
+    };
+
+    state.ws.onclose = () => {
+        state.wsConnected = false;
+        updateConnectionUi();
+        appendLog("received", { message: "socket_closed" }, "socket_closed");
+    };
+}
+
+function disconnectSession() {
+    if (state.ws) {
+        state.ws.close();
+    }
+    state.ws = null;
+    state.wsConnected = false;
+    updateConnectionUi();
+}
+
+function sendEvent(eventName, data = {}) {
+    if (!state.wsConnected || !state.ws || state.ws.readyState !== WebSocket.OPEN) {
+        appendLog("error", { message: "WebSocket is not connected" }, eventName);
+        return false;
+    }
 
     const payload = {
-        type: 'event',
-        event,
-        data: data || {}
+        type: "event",
+        event: eventName,
+        data
     };
-    ws.send(JSON.stringify(payload));
-    updateDebugPanel();
+
+    state.ws.send(JSON.stringify(payload));
+    appendLog("sent", payload, eventName);
     return true;
 }
 
-function connectWebSocket() {
-    if (!currentSession.sessionId || !currentSession.sessionToken) return;
-
-    if (currentSession.ws && [WebSocket.OPEN, WebSocket.CONNECTING].includes(currentSession.ws.readyState)) {
+async function submitHistoryMessage() {
+    if (state.currentStep !== "history") {
         return;
     }
 
-    const wsUrl = `${WS_BASE_URL}/ws/session/${currentSession.sessionId}?token=${encodeURIComponent(currentSession.sessionToken)}`;
-    const ws = new WebSocket(wsUrl);
-    currentSession.ws = ws;
-
-    ws.onopen = () => {
-        currentSession.wsConnected = true;
-        updateDebugPanel();
-        console.log('WebSocket connected');
-    };
-
-    ws.onmessage = (event) => {
-        try {
-            handleServerEvent(JSON.parse(event.data));
-        } catch (error) {
-            console.error('Failed to parse WebSocket message:', error);
-        }
-    };
-
-    ws.onerror = (error) => {
-        console.error('WebSocket error:', error);
-    };
-
-    ws.onclose = () => {
-        currentSession.wsConnected = false;
-        updateDebugPanel();
-        console.log('WebSocket disconnected');
-    };
-}
-
-function disconnectWebSocket() {
-    if (currentSession.ws) {
-        currentSession.ws.close();
-    }
-    currentSession.ws = null;
-    currentSession.wsConnected = false;
-    updateDebugPanel();
-}
-
-
-async function startSession() {
-    const scenarioId = document.getElementById('scenarioId').value.trim();
-    const studentId = document.getElementById('studentId').value.trim();
-    
-    if (!scenarioId || !studentId) {
-        showError('Please enter both Scenario ID and Student ID');
-        return;
-    }
-    
-    try {
-        const response = await apiCall('/session/start', 'POST', {
-            scenario_id: scenarioId,
-            student_id: studentId
-        });
-        
-        currentSession.sessionId = response.session_id;
-        currentSession.scenarioId = scenarioId;
-        currentSession.sessionToken = response.session_token || null;
-        connectWebSocket();
-        
-        // Fetch session details
-        await loadSessionInfo();
-        
-        // Start with HISTORY step
-        showHistoryStep();
-        
-    } catch (error) {
-        console.error('Failed to start session:', error);
-    }
-}
-
-async function loadSessionInfo() {
-    try {
-        const session = await apiCall(`/session/${currentSession.sessionId}`);
-        
-        currentSession.currentStep = session.current_step;
-        currentSession.scenarioMetadata = session.scenario_metadata;
-        currentSession.mcqQuestions = session.scenario_metadata.assessment_questions || [];
-        
-        // Update UI
-        document.getElementById('sessionInfo').style.display = 'flex';
-        document.getElementById('sessionId').textContent = currentSession.sessionId;
-        document.getElementById('currentStep').textContent = currentSession.currentStep;
-        document.getElementById('scenarioTitle').textContent = session.scenario_metadata.title || 'Unknown';
-        
-    } catch (error) {
-        console.error('Failed to load session info:', error);
-    }
-}
-
-// ==========================================
-// HISTORY Step
-// ==========================================
-
-function showHistoryStep() {
-    currentSession.currentStep = 'history';
-    showScreen('historyScreen');
-    document.getElementById('currentStep').textContent = 'history';
-    
-    // Clear conversation box
-    const conversationBox = document.getElementById('conversationBox');
-    conversationBox.innerHTML = '<div class="conversation-empty">Start by asking the patient a question...</div>';
-
-    const transcriptInput = document.getElementById('patientQuestion');
-    if (transcriptInput) {
-        transcriptInput.value = '';
-    }
-}
-
-async function sendMessageText(message) {
-    if (!message) {
+    const input = qs("historyMessageInput");
+    const text = input.value.trim();
+    if (!text) {
         return;
     }
 
-    try {
-        addMessageToConversation('student', message);
-        const sent = sendWsEvent('text_message', { text: message });
-        if (!sent) {
-            showError('WebSocket is disconnected. Please reconnect and try again.');
-        }
-    } catch (error) {
-        console.error('Failed to send message:', error);
+    const sent = sendEvent("text_message", { text });
+    if (sent) {
+        input.value = "";
     }
 }
 
-async function sendPatientMessage() {
-    const input = document.getElementById('patientQuestion');
-    if (!input) return;
-    
-    const message = input.value.trim();
-    if (!message) return;
-    
-    // Send the message
-    await sendMessageText(message);
-    
-    // Clear the input
-    input.value = '';
-}
-
-async function togglePatientRecording() {
-    if (isRecording) {
-        stopRecording();
-    } else {
-        await startRecording({
-            buttonId: 'recordButton',
-            statusId: 'recordingStatus',
-            labelText: '🎤 Record Voice',
-            targetType: 'patient',
-            onStop: async (blob) => {
-                await sendAudioForTranscription(blob, async (transcript) => {
-                    const input = document.getElementById('patientQuestion');
-                    if (input) {
-                        input.value = transcript;
-                    }
-                    await sendMessageText(transcript);
-                });
-            }
-        });
+function submitMcqAnswer(questionId, answer) {
+    if (state.currentStep !== "assessment") {
+        return;
     }
+
+    state.selectedMcqAnswers[questionId] = {
+        ...(state.selectedMcqAnswers[questionId] || {}),
+        answer
+    };
+    renderMcqs();
+    sendEvent("mcq_answer", { question_id: questionId, answer });
 }
 
-async function toggleNurseRecording() {
-    if (isRecording) {
-        stopRecording();
-    } else {
-        const recordingIds = getStaffNurseRecordingIds();
-        if (!recordingIds) {
-            showError('Voice recording is not available for this step.');
-            return;
-        }
-        await startRecording({
-            buttonId: recordingIds.buttonId,
-            statusId: recordingIds.statusId,
-            labelText: '🎤 Record Nurse Question',
-            targetType: 'nurse',
-            onStop: async (blob) => {
-                await sendAudioForTranscription(blob, async (transcript) => {
-                    const inputId = getStaffNurseInputId();
-                    const input = document.getElementById(inputId);
-                    if (input) {
-                        input.value = transcript;
-                    }
-                    await askStaffNurse(transcript);
-                });
-            }
-        });
+function submitAction(actionCode, backendActionType) {
+    if (state.currentStep !== "cleaning_and_dressing") {
+        return;
     }
-}
 
-async function startRecording(target) {
-    try {
-        mediaStream = await navigator.mediaDevices.getUserMedia({ audio: true });
-        recordedChunks = [];
-        mediaRecorder = new MediaRecorder(mediaStream);
-        activeRecordingTarget = target;
-        mediaRecorder.ondataavailable = (event) => {
-            if (event.data.size > 0) {
-                recordedChunks.push(event.data);
-            }
-        };
-        mediaRecorder.onstop = async () => {
-            const blob = new Blob(recordedChunks, { type: mediaRecorder.mimeType || 'audio/webm' });
-            recordedChunks = [];
-            if (mediaStream) {
-                mediaStream.getTracks().forEach(track => track.stop());
-                mediaStream = null;
-            }
-            const recordingTarget = activeRecordingTarget;
-            activeRecordingTarget = null;
-            if (recordingTarget && typeof recordingTarget.onStop === 'function') {
-                await recordingTarget.onStop(blob);
-            }
-        };
-        mediaRecorder.start();
-        isRecording = true;
-        updateRecordingUI(true, target.buttonId, target.statusId, target.labelText);
-    } catch (error) {
-        console.error('Failed to start recording:', error);
-        showError('Unable to access microphone. Please allow microphone access.');
-    }
-}
-
-
-
-function blobToBase64(blob) {
-    return new Promise((resolve, reject) => {
-        const reader = new FileReader();
-        reader.onloadend = () => {
-            const result = reader.result || '';
-            const base64 = String(result).split(',')[1] || '';
-            resolve(base64);
-        };
-        reader.onerror = reject;
-        reader.readAsDataURL(blob);
+    sendEvent("action_performed", {
+        action_type: backendActionType,
+        action: actionCode
     });
 }
 
-function stopRecording() {
-    if (mediaRecorder && isRecording) {
-        mediaRecorder.stop();
-        isRecording = false;
-        if (activeRecordingTarget) {
-            updateRecordingUI(
-                false,
-                activeRecordingTarget.buttonId,
-                activeRecordingTarget.statusId,
-                activeRecordingTarget.labelText
-            );
-        }
+function completeCurrentStep() {
+    if (!state.currentStep) {
+        return;
     }
+    sendEvent("step_complete", { step: state.currentStep });
 }
 
-async function sendAudioForTranscription(audioBlob, onTranscript) {
-    showLoading();
-    try {
-        if (getWebSocket()) {
-            const base64Audio = await blobToBase64(audioBlob);
-            pendingTranscriptionHandler = onTranscript || null;
-            sendWsEvent('stt_chunk', {
-                audio_chunk: base64Audio
-            });
-            const sent = sendWsEvent('stt_complete', {
-                filename: 'stream.webm',
-                content_type: audioBlob.type || 'audio/webm'
-            });
-            if (sent) {
-                return;
+function confirmHistoryTransition() {
+    if (!state.historyTransitionPendingConfirmation) {
+        return;
+    }
+    sendEvent("confirm_step_transition");
+}
+
+async function handleServerMessage(message) {
+    if (message.type === "error") {
+        return;
+    }
+
+    const data = message.data || {};
+
+    switch (message.event) {
+        case "nurse_message":
+            if (data.role === "patient") {
+                state.patientMessages.unshift({ role: "patient", text: data.text || "" });
+                renderMessageStream("historyResponses", state.patientMessages, "patient responses");
+            } else if (data.text) {
+                state.nurseMessages.unshift({ role: data.role || "nurse", text: data.text });
+                renderMessageStream("nurseResponses", state.nurseMessages, "nurse response");
             }
-            pendingTranscriptionHandler = null;
-        }
-
-        const formData = new FormData();
-        formData.append('file', audioBlob, 'history-audio.webm');
-        const response = await fetch(`${API_BASE_URL}/audio/stt`, {
-            method: 'POST',
-            body: formData
-        });
-        if (!response.ok) {
-            const error = await response.json();
-            throw new Error(error.detail || 'STT request failed');
-        }
-        const result = await response.json();
-        const transcript = (result.text || '').trim();
-        if (!transcript) {
-            return;
-        }
-        if (onTranscript) {
-            await onTranscript(transcript);
-        }
-    } catch (error) {
-        console.error('Failed to transcribe audio:', error);
-        showError(error.message);
-    } finally {
-        hideLoading();
-    }
-}
-
-function addMessageToConversation(speaker, text) {
-    const conversationBox = document.getElementById('conversationBox');
-    
-    // Remove empty state if present
-    const emptyState = conversationBox.querySelector('.conversation-empty');
-    if (emptyState) {
-        emptyState.remove();
-    }
-    
-    // Create message element
-    const messageDiv = document.createElement('div');
-    messageDiv.className = `message ${speaker}`;
-    messageDiv.innerHTML = `
-        <div class="message-speaker">${speaker === 'student' ? 'You' : 'Patient'}:</div>
-        <div>${text}</div>
-    `;
-    
-    conversationBox.appendChild(messageDiv);
-    conversationBox.scrollTop = conversationBox.scrollHeight;
-}
-
-// ==========================================
-// ASSESSMENT Step
-// ==========================================
-
-function showAssessmentStep() {
-    currentSession.currentStep = 'assessment';
-    showScreen('assessmentScreen');
-    document.getElementById('currentStep').textContent = 'assessment';
-    
-    // Load MCQ questions
-    loadMCQQuestions();
-}
-
-function loadMCQQuestions() {
-    const container = document.getElementById('mcqContainer');
-    container.innerHTML = '';
-    
-    if (!currentSession.mcqQuestions || currentSession.mcqQuestions.length === 0) {
-        container.innerHTML = '<p class="text-muted">No assessment questions available.</p>';
-        return;
-    }
-    
-    currentSession.mcqQuestions.forEach((question, index) => {
-        const questionDiv = document.createElement('div');
-        questionDiv.className = 'mcq-question';
-        questionDiv.id = `mcq-${question.id}`;
-        
-        questionDiv.innerHTML = `
-            <div class="mcq-header">
-                <span class="question-number">Question ${index + 1} of ${currentSession.mcqQuestions.length}</span>
-                <span class="mcq-status" id="status-${question.id}" style="display: none;"></span>
-            </div>
-            <div class="question-text">${question.question}</div>
-            <div class="mcq-options" id="options-${question.id}">
-                ${question.options.map(option => `
-                    <div class="mcq-option" onclick="selectMCQOption('${question.id}', '${option}')">
-                        ${option}
-                    </div>
-                `).join('')}
-            </div>
-            <div class="mcq-feedback" id="feedback-${question.id}" style="display: none;"></div>
-        `;
-        
-        container.appendChild(questionDiv);
-    });
-}
-
-async function selectMCQOption(questionId, answer) {
-    try {
-        const sent = sendWsEvent('mcq_answer', {
-            question_id: questionId,
-            answer: answer
-        });
-        if (!sent) {
-            showError('WebSocket is disconnected. Please reconnect and try again.');
-        }
-    } catch (error) {
-        console.error('Failed to submit MCQ answer:', error);
-    }
-}
-
-// ==========================================
-// CLEANING AND DRESSING Step (Combined - 9 Actions)
-// ==========================================
-
-function showCleaningAndDressingStep() {
-    currentSession.currentStep = 'cleaning_and_dressing';
-    currentSession.actionCounter = 0;
-    showScreen('cleaningAndDressingScreen');
-    document.getElementById('currentStep').textContent = 'cleaning_and_dressing';
-    
-    // Reset counter
-    document.getElementById('actionCounter').textContent = '0';
-    
-    // Load action buttons
-    loadCleaningAndDressingActions();
-    
-    // Clear feedback
-    const feedbackBox = document.getElementById('realtimeFeedback');
-    feedbackBox.innerHTML = '<strong>Real-Time Feedback:</strong><p class="text-muted">Perform actions to receive feedback...</p>';
-}
-
-function loadCleaningAndDressingActions() {
-    // ⭐ FIX #2: Match action names with RAG guidelines exactly
-    const actions = [
-        { type: 'action_initial_hand_hygiene', label: '1. Initial Hand Hygiene' },
-        { type: 'action_clean_trolley', label: '2. Clean the Dressing Trolley' },
-        { type: 'action_hand_hygiene_after_cleaning', label: '3. Hand Hygiene After Trolley Cleaning' },
-        { type: 'action_select_solution', label: '4. Select Prescribed Cleaning Solution' },
-        // Action 5 is verification - handled by conversational chat
-        { type: 'action_select_dressing', label: '6. Select Dressing Materials' },
-        // Action 7 is verification - handled by conversational chat
-        { type: 'action_arrange_materials', label: '8. Arrange Solutions and Materials on Trolley' },
-        { type: 'action_bring_trolley', label: '9. Bring Prepared Trolley to Patient Area' }
-    ];
-    
-    const container = document.getElementById('cleaningAndDressingActions');
-    container.innerHTML = '';
-    
-    actions.forEach(action => {
-        const button = document.createElement('button');
-        button.className = 'action-btn';
-        button.onclick = () => recordAction(action.type);
-        button.innerHTML = `
-            <span class="checkmark">✓</span>
-            <span>${action.label}</span>
-        `;
-        container.appendChild(button);
-    });
-}
-
-async function recordAction(actionType) {
-    try {
-        const sent = sendWsEvent('action_performed', {
-            action_type: actionType
-        });
-        if (!sent) {
-            showError('WebSocket is disconnected. Please reconnect and try again.');
-        }
-    } catch (error) {
-        console.error('Failed to record action:', error);
-    }
-}
-
-// Verification is now handled automatically in askStaffNurse()
-// No separate functions needed
-
-function displayRealtimeFeedback(feedback, feedbackAudio) {
-    const feedbackBox = document.getElementById('realtimeFeedback');
-    
-    // ⭐ NEW: Handle duplicate action status
-    let statusClass = 'success';
-    let statusIcon = '✓';
-    
-    if (feedback.status === 'complete') {
-        statusClass = 'success';
-        statusIcon = '✓';
-    } else if (feedback.status === 'missing_prerequisites') {
-        statusClass = 'warning';
-        statusIcon = '⚠️';
-    } else if (feedback.status === 'duplicate') {
-        statusClass = 'info';
-        statusIcon = 'ℹ️';
-    }
-    
-    let html = `
-        <strong>Real-Time Feedback:</strong>
-        <div class="feedback-message ${statusClass}">
-            <span class="feedback-icon">${statusIcon}</span>
-            <p>${feedback.message}</p>
-    `;
-    
-    // Show missing actions if any
-    if (feedback.missing_actions && feedback.missing_actions.length > 0) {
-        html += `
-            <div class="missing-actions">
-                <strong>Missing Prerequisites:</strong>
-                <ul>
-                    ${feedback.missing_actions.map(action => `
-                        <li>${action.replace('action_', '').replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}</li>
-                    `).join('')}
-                </ul>
-            </div>
-        `;
-    }
-    
-    html += '</div>';
-    feedbackBox.innerHTML = html;
-
-    if (typeof feedback.total_actions_so_far === 'number') {
-        currentSession.actionCounter = feedback.total_actions_so_far;
-        document.getElementById('actionCounter').textContent = String(currentSession.actionCounter);
-    } else if (feedback.action_recorded === true) {
-        currentSession.actionCounter += 1;
-        document.getElementById('actionCounter').textContent = String(currentSession.actionCounter);
-    }
-
-    if (feedbackAudio && feedbackAudio.audio_base64) {
-        playAudioFromBase64(feedbackAudio.audio_base64, feedbackAudio.content_type);
-    }
-}
-
-// ==========================================
-// Staff Nurse
-// ==========================================
-
-function getStaffNurseInputId() {
-    const step = currentSession.currentStep;
-    if (step === 'history') {
-        return 'nurseQuestionHistory';
-    }
-    if (step === 'assessment') {
-        return 'nurseQuestionAssessment';
-    }
-    return 'nurseQuestionCleaningAndDressing';
-}
-
-function getStaffNurseResponseId() {
-    const step = currentSession.currentStep;
-    if (step === 'history') {
-        return 'staffNurseHistory';
-    }
-    if (step === 'assessment') {
-        return 'staffNurseAssessment';
-    }
-    return 'staffNurseCleaningAndDressing';
-}
-
-function getStaffNurseRecordingIds() {
-    const step = currentSession.currentStep;
-    if (step === 'history') {
-        return { buttonId: 'nurseRecordButton', statusId: 'nurseRecordingStatus' };
-    }
-    if (step === 'assessment') {
-        return { buttonId: 'nurseRecordButtonAssessment', statusId: 'nurseRecordingStatusAssessment' };
-    }
-    if (step === 'cleaning_and_dressing') {
-        return { buttonId: 'nurseRecordButtonCleaning', statusId: 'nurseRecordingStatusCleaning' };
-    }
-    return null;
-}
-
-async function askStaffNurse(messageOverride) {
-    const inputId = getStaffNurseInputId();
-
-    const input = document.getElementById(inputId);
-    const message = messageOverride ? messageOverride.trim() : input.value.trim();
-
-    if (!message) return;
-
-    try {
-        const sentEvent = 'nurse_message';
-        const sent = sendWsEvent(sentEvent, { text: message });
-        if (!sent) {
-            showError('WebSocket is disconnected. Please reconnect and try again.');
-            return;
-        }
-
-        input.value = '';
-    } catch (error) {
-        console.error('Failed to ask staff nurse:', error);
-    }
-}
-
-// ==========================================
-// Step Completion
-// ==========================================
-
-async function finishStep(step) {
-    if (step === 'history' || step === 'assessment') {
-        await completeStepViaRest(step);
-        return;
-    }
-
-    // Mark that we are waiting for step completion so handleServerEvent
-    // can coordinate feedback and navigation correctly.
-    currentSession.awaitingStepCompletion = true;
-    currentSession.feedbackRenderedForPendingStep = false;
-    currentSession.deferredNextStep = null;
-
-    const sent = sendWsEvent('step_complete', { step });
-    if (!sent) {
-        // Reset flags if WS is down so the UI is not stuck
-        currentSession.awaitingStepCompletion = false;
-        showError('WebSocket is disconnected. Please reconnect and try again.');
-    }
-}
-
-async function completeStepViaRest(step) {
-    try {
-        const result = await apiCall('/session/complete-step', 'POST', {
-            session_id: currentSession.sessionId,
-            step
-        });
-
-        currentSession.awaitingStepCompletion = false;
-        currentSession.feedbackRenderedForPendingStep = false;
-        currentSession.deferredNextStep = null;
-        currentSession.nextStep = result.next_step;
-
-        if (step === 'history') {
-            displayHistoryFeedback(result.feedback || {}, result.feedback_audio || null);
-            return;
-        }
-
-        if (step === 'assessment') {
-            const feedback = result.feedback || {};
-            displayAssessmentResults(
-                feedback.mcq_result,
-                result.feedback_audio || null,
-                feedback.summary_text || null
-            );
-            return;
-        }
-
-        if (result.next_step) {
-            continueToNextStep();
-        }
-    } catch (error) {
-        console.error('Failed to complete step via REST:', error);
-    }
-}
-
-function displayHistoryFeedback(feedback, feedbackAudio) {
-    const modal = document.getElementById('feedbackModal');
-    const content = document.getElementById('feedbackContent');
-    
-    let html = `
-        <div class="feedback-section">
-            <h3>📋 History Taking Feedback</h3>
-    `;
-    
-    // Narrated feedback (primary)
-    if (feedback.narrated_feedback) {
-        html += `
-            <div class="narrated-feedback">
-                ${feedback.narrated_feedback.message_text}
-            </div>
-        `;
-    }
-    
-    // Score display
-    if (feedback.score !== undefined) {
-        const scorePercent = (feedback.score * 100).toFixed(0);
-        html += `
-            <div class="score-display">
-                <div class="score-label">Step Quality Score</div>
-                <div class="score-value">${feedback.score.toFixed(2)}</div>
-                <div class="score-bar">
-                    <div class="score-fill" style="width: ${scorePercent}%"></div>
-                </div>
-                <div class="score-interpretation">${feedback.interpretation || ''}</div>
-            </div>
-        `;
-    }
-    
-    html += '</div>';
-    
-    content.innerHTML = html;
-    modal.style.display = 'flex';
-
-    if (feedbackAudio && feedbackAudio.audio_base64) {
-        playAudioFromBase64(feedbackAudio.audio_base64, feedbackAudio.content_type);
-    }
-}
-
-function displayAssessmentResults(mcqResult, summaryAudio, summaryText = null) {
-    const modal = document.getElementById('feedbackModal');
-    const content = document.getElementById('feedbackContent');
-    
-    if (!mcqResult) return;
-
-    const scorePercent = (mcqResult.score * 100).toFixed(0);
-    
-    let html = `
-        <div class="feedback-section">
-            <h3>📊 Assessment Results</h3>
-            <div class="mcq-summary">
-                <div class="mcq-score-large">
-                    ${mcqResult.correct_count} / ${mcqResult.total_questions}
-                </div>
-                <div class="mcq-summary-text">
-                    ${summaryText || mcqResult.summary}
-                </div>
-                <div class="score-bar">
-                    <div class="score-fill" style="width: ${scorePercent}%"></div>
-                </div>
-            </div>
-    `;
-    
-    // Note: No narrated feedback for assessment - MCQ explanations already provided
-    html += `
-            <div class="info-box">
-                <strong>ℹ️ Note:</strong> Detailed explanations were provided for each question during the assessment.
-            </div>
-        </div>
-    `;
-    
-    content.innerHTML = html;
-    modal.style.display = 'flex';
-
-    if (summaryAudio && summaryAudio.audio_base64) {
-        playAudioFromBase64(summaryAudio.audio_base64, summaryAudio.content_type);
-    }
-}
-
-function displayPreparationSummary(summary) {
-    const modal = document.getElementById('feedbackModal');
-    const content = document.getElementById('feedbackContent');
-    
-    let html = `
-        <div class="feedback-section">
-            <h3>🔧 Preparation Summary</h3>
-            <div class="preparation-summary">
-                <p>${summary.message}</p>
-                <div class="action-count">
-                    <strong>Actions Completed:</strong> ${summary.actions_completed} / ${summary.expected_actions}
-                </div>
-            </div>
-            <div class="info-box">
-                <strong>ℹ️ Note:</strong> Real-time feedback was provided during preparation. No final score is given for this step.
-            </div>
-        </div>
-    `;
-    
-    content.innerHTML = html;
-    modal.style.display = 'flex';
-}
-
-function displayCleaningSummary(summaryText) {
-    const modal = document.getElementById('feedbackModal');
-    const content = document.getElementById('feedbackContent');
-
-    const html = `
-        <div class="feedback-section">
-            <h3>🧹 Preparation Step Summary</h3>
-            <div class="narrated-feedback">
-                <p>${summaryText}</p>
-            </div>
-        </div>
-    `;
-
-    content.innerHTML = html;
-    modal.style.display = 'flex';
-}
-
-function closeFeedbackModal() {
-    document.getElementById('feedbackModal').style.display = 'none';
-}
-
-function continueToNextStep() {
-    closeFeedbackModal();
-
-    // deferredNextStep is set by the step_complete WS event when feedback
-    // hasn't rendered yet. Fall back to nextStep for non-deferred cases.
-    const nextStep = currentSession.deferredNextStep || currentSession.nextStep;
-
-    // Clear all coordination flags before navigating
-    currentSession.awaitingStepCompletion = false;
-    currentSession.feedbackRenderedForPendingStep = false;
-    currentSession.deferredNextStep = null;
-    currentSession.nextStep = nextStep;
-
-    switch (nextStep) {
-        case 'assessment':
-            showAssessmentStep();
             break;
-        case 'cleaning_and_dressing':
-            showCleaningAndDressingStep();
+
+        case "mcq_answer_result":
+            state.selectedMcqAnswers[data.question_id] = {
+                ...(state.selectedMcqAnswers[data.question_id] || {}),
+                result: data
+            };
+            renderMcqs();
             break;
-        case 'completed':
-            showCompletionScreen();
+
+        case "real_time_feedback":
+            if (data.action_recorded && data.action_type) {
+                state.completedActions.add(data.action_type);
+                renderActionButtons();
+            }
+            renderStructuredBox("cleaningFeedback", data);
             break;
+
+        case "final_feedback":
+            state.historyTransitionPendingConfirmation = true;
+            qs("confirmHistoryTransitionBtn").disabled = false;
+            renderStructuredBox("historyFeedback", data);
+            break;
+
+        case "assessment_summary":
+            renderStructuredBox("assessmentSummary", data);
+            break;
+
+        case "step_complete":
+            state.historyTransitionPendingConfirmation = false;
+            qs("confirmHistoryTransitionBtn").disabled = true;
+            if (data.next_step) {
+                state.currentStep = data.next_step;
+                if (data.next_step === "completed") {
+                    renderStructuredBox("assessmentSummary", {
+                        status: "completed",
+                        session_id: state.sessionInfo?.session_id || state.activeSession?.session_id
+                    });
+                }
+            }
+            await refreshSessionDetails();
+            break;
+
+        case "session_end":
+            state.currentStep = "completed";
+            if (state.sessionInfo) {
+                state.sessionInfo.current_step = "completed";
+            }
+            updateSessionStrip();
+            setPanelState("completed");
+            break;
+
         default:
-            console.error('Unknown next step:', nextStep);
+            break;
     }
 }
 
-let wsAudioQueue = Promise.resolve();
-
-function enqueueWebSocketAudio(base64Audio) {
-    wsAudioQueue = wsAudioQueue.then(() => playAudio(base64Audio));
-    return wsAudioQueue;
+async function loadHistoryScript() {
+    const selected = qs("historyScriptSelect").value;
+    const lines = HISTORY_SCRIPTS[selected] || [];
+    qs("historyScriptEditor").value = lines.join("\n");
 }
 
-// ==========================================
-// Completion Screen
-// ==========================================
+async function runHistoryScript() {
+    if (state.currentStep !== "history" || state.scriptRunning) {
+        return;
+    }
 
-function showCompletionScreen() {
-    currentSession.currentStep = 'completed';
-    showScreen('completionScreen');
-    document.getElementById('currentStep').textContent = 'completed';
-    
-    const summary = document.getElementById('completionSummary');
-    summary.innerHTML = `
-        <h3>Session Summary</h3>
-        <p><strong>Session ID:</strong> ${currentSession.sessionId}</p>
-        <p><strong>Scenario:</strong> ${currentSession.scenarioMetadata.title}</p>
-        <div class="completion-message">
-            <p>✓ Patient History Completed</p>
-            <p>✓ Wound Assessment Completed</p>
-            <p>✓ Cleaning & Dressing Preparation Completed</p>
-        </div>
-        <p class="success-message">All procedural steps have been completed successfully!</p>
-    `;
+    const lines = qs("historyScriptEditor").value
+        .split(/\r?\n/)
+        .map(line => line.trim())
+        .filter(Boolean);
+
+    if (!lines.length) {
+        return;
+    }
+
+    state.scriptRunning = true;
+    try {
+        for (const line of lines) {
+            qs("historyMessageInput").value = line;
+            await submitHistoryMessage();
+            await sleep(700);
+        }
+    } finally {
+        state.scriptRunning = false;
+    }
 }
 
-// ==========================================
-// Initialize
-// ==========================================
+async function runMcqScript(mode) {
+    if (state.currentStep !== "assessment") {
+        return;
+    }
 
-document.addEventListener('DOMContentLoaded', () => {
-    console.log('VR Nursing Education System - Test UI Loaded (Updated)');
-    showScreen('startScreen');
-    updateDebugPanel();
+    const questions = state.sessionInfo?.scenario_metadata?.assessment_questions || [];
+    for (const question of questions) {
+        const answer = mode === "correct"
+            ? question.correct_answer
+            : question.options?.[0];
+        if (answer) {
+            submitMcqAnswer(question.id, answer);
+            await sleep(250);
+        }
+    }
+}
+
+async function runActionSequence() {
+    if (state.currentStep !== "cleaning_and_dressing") {
+        return;
+    }
+
+    for (const action of PROCEDURE_ACTIONS) {
+        submitAction(action.code, action.backendActionType);
+        await sleep(350);
+    }
+}
+
+async function exportSessionLog() {
+    const sessionId = state.activeSession?.session_id || state.sessionInfo?.session_id;
+    let backendLog = null;
+
+    if (sessionId) {
+        try {
+            backendLog = await apiCall(`/session/${sessionId}/log`);
+        } catch (error) {
+            backendLog = { error: error.message };
+        }
+    }
+
+    const exportPayload = {
+        exported_at: new Date().toISOString(),
+        api_base_url: state.apiBaseUrl,
+        ws_base_url: state.wsBaseUrl,
+        active_session: state.activeSession,
+        session_info: state.sessionInfo,
+        current_step: state.currentStep,
+        selected_mcq_answers: state.selectedMcqAnswers,
+        completed_actions: Array.from(state.completedActions),
+        websocket_log: state.logEntries,
+        last_structured_response: state.lastStructuredResponse,
+        backend_session_log: backendLog
+    };
+
+    const blob = new Blob([JSON.stringify(exportPayload, null, 2)], { type: "application/json" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = `${sessionId || "session"}-evaluation-log.json`;
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+    URL.revokeObjectURL(url);
+}
+
+function clearLog() {
+    state.logEntries = [];
+    qs("logConsole").innerHTML = '<div class="empty-state">No WebSocket traffic yet.</div>';
+}
+
+function populateHistoryScripts() {
+    const select = qs("historyScriptSelect");
+    select.innerHTML = Object.keys(HISTORY_SCRIPTS).map(key => `
+        <option value="${sanitizeHtml(key)}">${sanitizeHtml(key)}</option>
+    `).join("");
+    loadHistoryScript();
+}
+
+function startAutoPoll() {
+    if (state.autoPollHandle) {
+        clearInterval(state.autoPollHandle);
+    }
+    state.autoPollHandle = setInterval(() => {
+        if (!state.wsConnected) {
+            refreshActiveSession();
+        }
+    }, 5000);
+}
+
+function bindEvents() {
+    qs("refreshActiveSessionBtn").addEventListener("click", refreshActiveSession);
+    qs("connectSessionBtn").addEventListener("click", connectToActiveSession);
+    qs("disconnectSessionBtn").addEventListener("click", disconnectSession);
+    qs("refreshSessionDetailsBtn").addEventListener("click", refreshSessionDetails);
+    qs("sendHistoryMessageBtn").addEventListener("click", submitHistoryMessage);
+    qs("historyMessageInput").addEventListener("keydown", event => {
+        if (event.key === "Enter") {
+            event.preventDefault();
+            submitHistoryMessage();
+        }
+    });
+    qs("completeHistoryBtn").addEventListener("click", completeCurrentStep);
+    qs("confirmHistoryTransitionBtn").addEventListener("click", confirmHistoryTransition);
+    qs("completeAssessmentBtn").addEventListener("click", completeCurrentStep);
+    qs("completeCleaningBtn").addEventListener("click", completeCurrentStep);
+    qs("answerAllCorrectBtn").addEventListener("click", () => runMcqScript("correct"));
+    qs("answerAllFirstBtn").addEventListener("click", () => runMcqScript("first"));
+    qs("runActionSequenceBtn").addEventListener("click", runActionSequence);
+    qs("loadHistoryScriptBtn").addEventListener("click", loadHistoryScript);
+    qs("runHistoryScriptBtn").addEventListener("click", runHistoryScript);
+    qs("exportJsonBtn").addEventListener("click", exportSessionLog);
+    qs("clearLogBtn").addEventListener("click", clearLog);
+    qs("apiBaseUrl").addEventListener("change", refreshActiveSession);
+    qs("wsBaseUrl").addEventListener("change", refreshActiveSession);
+}
+
+function initializeUi() {
+    populateHistoryScripts();
+    renderMcqs();
+    renderActionButtons();
+    updateSessionStrip();
+    updateConnectionUi();
+    setPanelState(null);
+    bindEvents();
+    startAutoPoll();
+    refreshActiveSession();
+}
+
+window.addEventListener("beforeunload", () => {
+    if (state.autoPollHandle) {
+        clearInterval(state.autoPollHandle);
+    }
+    disconnectSession();
 });
 
-window.addEventListener('beforeunload', () => {
-    disconnectWebSocket();
-});
+document.addEventListener("DOMContentLoaded", initializeUi);

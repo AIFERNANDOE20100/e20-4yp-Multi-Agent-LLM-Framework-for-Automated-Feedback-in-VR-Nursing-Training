@@ -3,297 +3,175 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>VR Nursing Education System - Test UI</title>
+    <title>WoundCareSim Evaluation Harness</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <div class="container">
-        <!-- Header -->
-        <header class="header">
-            <h1>VR Nursing Education System</h1>
-            <p class="subtitle">Backend Testing Interface</p>
+    <div class="app-shell">
+        <header class="topbar">
+            <div>
+                <p class="eyebrow">Browser-Only Test Harness</p>
+                <h1>WoundCareSim Evaluation UI</h1>
+            </div>
+            <div class="topbar-actions">
+                <button class="btn btn-secondary" id="refreshActiveSessionBtn">Refresh Active Session</button>
+                <button class="btn btn-primary" id="connectSessionBtn">Connect to Active Session</button>
+                <button class="btn btn-danger" id="disconnectSessionBtn" disabled>Disconnect</button>
+            </div>
         </header>
 
-        <!-- Session Info Bar -->
-        <div class="session-info" id="sessionInfo" style="display: none;">
-            <div class="info-item">
-                <strong>Session ID:</strong> <span id="sessionId">-</span>
+        <section class="status-strip">
+            <div class="status-card">
+                <span class="status-label">Active Session</span>
+                <strong id="sessionId">-</strong>
             </div>
-            <div class="info-item">
-                <strong>Current Step:</strong> <span id="currentStep" class="step-badge">-</span>
+            <div class="status-card">
+                <span class="status-label">Session Token</span>
+                <strong id="sessionToken">-</strong>
             </div>
-            <div class="info-item">
-                <strong>Scenario:</strong> <span id="scenarioTitle">-</span>
+            <div class="status-card">
+                <span class="status-label">Scenario ID</span>
+                <strong id="scenarioId">-</strong>
             </div>
-        </div>
-
-        <div class="debug-panel" id="debugPanel">
-            <div class="debug-row"><strong>WebSocket:</strong> <span id="wsStatus" class="debug-value disconnected">Disconnected</span></div>
-            <div class="debug-row"><strong>Last Sent:</strong> <span id="lastSentEvent" class="debug-value">-</span></div>
-            <div class="debug-row"><strong>Last Received:</strong> <span id="lastReceivedEvent" class="debug-value">-</span></div>
-        </div>
-
-        <!-- Start Screen -->
-        <div class="screen" id="startScreen">
-            <div class="card">
-                <h2>Start New Session</h2>
-                <p>Enter your details to begin the nursing procedure simulation.</p>
-
-                <div class="form-group">
-                    <label for="scenarioId">Scenario ID:</label>
-                    <input type="text" id="scenarioId" value="scenario_001" placeholder="Enter scenario ID">
-                </div>
-
-                <div class="form-group">
-                    <label for="studentId">Student ID:</label>
-                    <input type="text" id="studentId" value="student_123" placeholder="Enter your student ID">
-                </div>
-
-                <button class="btn btn-primary btn-large" onclick="startSession()">
-                    Start Session
-                </button>
-
-                <div class="info-box">
-                    <strong>Training Steps:</strong>
-                    <ol>
-                        <li><strong>History Taking</strong> - Communicate with the patient to gather their medical history</li>
-                        <li><strong>Wound Assessment</strong> - Answer assessment questions about the wound</li>
-                        <li><strong>Cleaning &amp; Dressing Preparation</strong> - Prepare all required materials and equipment</li>
-                    </ol>
-                </div>
+            <div class="status-card">
+                <span class="status-label">Current Step</span>
+                <strong id="currentStep" class="step-chip">-</strong>
             </div>
-        </div>
-
-        <!-- HISTORY Step -->
-        <div class="screen" id="historyScreen" style="display: none;">
-            <div class="step-header">
-                <h2>Step 1: Patient History</h2>
-                <p>Talk to the patient and gather the information you need before proceeding.</p>
-                <div class="step-reminder">
-                    <strong>&#9888;&#65039; Important:</strong> Proceed without any conversation and you will receive zero marks for this step.
-                </div>
+            <div class="status-card">
+                <span class="status-label">WebSocket</span>
+                <strong id="wsStatus" class="status-value disconnected">Disconnected</strong>
             </div>
+        </section>
 
-            <div class="main-content">
-                <!-- Patient Conversation -->
-                <div class="card">
-                    <h3>Patient Conversation</h3>
-                    <div class="conversation-box" id="conversationBox">
-                        <div class="conversation-empty">
-                            Start by asking the patient a question...
+        <main class="workspace">
+            <section class="control-panel">
+                <div class="panel">
+                    <div class="panel-header">
+                        <h2>Session Control</h2>
+                    </div>
+                    <div class="stack">
+                        <div>
+                            <label for="apiBaseUrl">API Base URL</label>
+                            <input type="text" id="apiBaseUrl" value="http://127.0.0.1:8000">
+                        </div>
+                        <div>
+                            <label for="wsBaseUrl">WebSocket Base URL</label>
+                            <input type="text" id="wsBaseUrl" value="ws://127.0.0.1:8000">
+                        </div>
+                        <div>
+                            <label for="pollStatus">Active Session Status</label>
+                            <div id="activeSessionStatus" class="inline-note">Not checked yet.</div>
                         </div>
                     </div>
+                </div>
 
-                    <div class="voice-controls">
-                        <button class="btn btn-record" id="recordButton" onclick="togglePatientRecording()">
-                            🎤 Record Voice
-                        </button>
-                        <span class="recording-status" id="recordingStatus">Not recording</span>
+                <div class="panel" id="historyPanel">
+                    <div class="panel-header">
+                        <h2>1. History</h2>
+                        <span class="panel-step" id="historyStepState">Inactive</span>
                     </div>
-
-                    <div class="input-group">
-                        <input
-                            type="text"
-                            id="patientQuestion"
-                            placeholder="Type your question to the patient..."
-                            onkeypress="handleEnter(event, sendPatientMessage)"
-                        >
-                        <button class="btn btn-secondary" onclick="sendPatientMessage()">
-                            Send
-                        </button>
+                    <div class="stack">
+                        <div>
+                            <label for="historyScriptSelect">Scripted Conversation</label>
+                            <div class="inline-row">
+                                <select id="historyScriptSelect"></select>
+                                <button class="btn btn-secondary" id="loadHistoryScriptBtn">Load Script</button>
+                                <button class="btn btn-secondary" id="runHistoryScriptBtn">Run Script</button>
+                            </div>
+                        </div>
+                        <div>
+                            <label for="historyMessageInput">Student Message</label>
+                            <div class="inline-row">
+                                <input type="text" id="historyMessageInput" placeholder="Ask the patient a question">
+                                <button class="btn btn-primary" id="sendHistoryMessageBtn">Send</button>
+                            </div>
+                        </div>
+                        <div>
+                            <label for="historyScriptEditor">Loaded Script Lines</label>
+                            <textarea id="historyScriptEditor" rows="6" placeholder="One message per line"></textarea>
+                        </div>
+                        <div class="response-box">
+                            <h3>Patient Responses</h3>
+                            <div id="historyResponses" class="message-stream empty-state">No patient response yet.</div>
+                        </div>
+                        <div class="response-box">
+                            <h3>History Feedback</h3>
+                            <div id="historyFeedback" class="structured-box empty-state">No history feedback yet.</div>
+                        </div>
+                        <div class="inline-row">
+                            <button class="btn btn-success" id="completeHistoryBtn">Complete Step</button>
+                            <button class="btn btn-warning" id="confirmHistoryTransitionBtn" disabled>Confirm Step Transition</button>
+                        </div>
                     </div>
                 </div>
 
-                <!-- Staff Nurse -->
-                <div class="card">
-                    <h3>Staff Nurse</h3>
-                    <div class="staff-nurse-response" id="staffNurseHistory">
-                        <p class="text-muted">Ask the staff nurse for guidance anytime...</p>
+                <div class="panel" id="assessmentPanel">
+                    <div class="panel-header">
+                        <h2>2. Assessment</h2>
+                        <span class="panel-step" id="assessmentStepState">Inactive</span>
                     </div>
-                    <div class="voice-controls">
-                        <button class="btn btn-record" id="nurseRecordButton" onclick="toggleNurseRecording()">
-                            🎤 Record Question
-                        </button>
-                        <span class="recording-status" id="nurseRecordingStatus">Not recording</span>
-                    </div>
-                    <div class="input-group">
-                        <input
-                            type="text"
-                            id="nurseQuestionHistory"
-                            placeholder="Ask the staff nurse..."
-                            onkeypress="handleEnter(event, askStaffNurse)"
-                        >
-                        <button class="btn btn-secondary" onclick="askStaffNurse()">
-                            Ask Nurse
-                        </button>
-                    </div>
-                </div>
-            </div>
-
-            <div class="action-bar">
-                <button class="btn btn-success btn-large" onclick="finishStep('history')">
-                    Finish History Step &#8594;
-                </button>
-            </div>
-        </div>
-
-        <!-- ASSESSMENT Step -->
-        <div class="screen" id="assessmentScreen" style="display: none;">
-            <div class="step-header">
-                <h2>Step 2: Wound Assessment</h2>
-                <p>Answer the assessment questions about the wound.</p>
-                <div class="step-reminder">
-                    <strong>&#9888;&#65039; Important:</strong> Proceed without answering any questions and you will receive zero marks for this step.
-                </div>
-            </div>
-
-            <div class="main-content">
-                <!-- MCQ Area -->
-                <div class="card">
-                    <h3>Assessment Questions</h3>
-                    <div id="mcqContainer">
-                        <!-- MCQ questions loaded dynamically -->
+                    <div class="stack">
+                        <div class="inline-row">
+                            <button class="btn btn-secondary" id="answerAllCorrectBtn">Answer All Correct</button>
+                            <button class="btn btn-secondary" id="answerAllFirstBtn">Answer First Options</button>
+                            <button class="btn btn-success" id="completeAssessmentBtn">Complete Step</button>
+                        </div>
+                        <div id="mcqContainer" class="stack">
+                            <div class="empty-state">Connect to a session to load MCQs.</div>
+                        </div>
+                        <div class="response-box">
+                            <h3>Assessment Summary</h3>
+                            <div id="assessmentSummary" class="structured-box empty-state">No assessment summary yet.</div>
+                        </div>
                     </div>
                 </div>
 
-                <!-- Staff Nurse -->
-                <div class="card">
-                    <h3>Staff Nurse</h3>
-                    <div class="staff-nurse-response" id="staffNurseAssessment">
-                        <p class="text-muted">Ask the staff nurse for guidance anytime...</p>
+                <div class="panel" id="cleaningPanel">
+                    <div class="panel-header">
+                        <h2>3. Cleaning and Dressing</h2>
+                        <span class="panel-step" id="cleaningStepState">Inactive</span>
                     </div>
-                    <div class="voice-controls">
-                        <button class="btn btn-record" id="nurseRecordButtonAssessment" onclick="toggleNurseRecording()">
-                            🎤 Record Question
-                        </button>
-                        <span class="recording-status" id="nurseRecordingStatusAssessment">Not recording</span>
-                    </div>
-                    <div class="input-group">
-                        <input
-                            type="text"
-                            id="nurseQuestionAssessment"
-                            placeholder="Ask the staff nurse..."
-                            onkeypress="handleEnter(event, askStaffNurse)"
-                        >
-                        <button class="btn btn-secondary" onclick="askStaffNurse()">
-                            Ask Nurse
-                        </button>
+                    <div class="stack">
+                        <div class="inline-row">
+                            <button class="btn btn-secondary" id="runActionSequenceBtn">Run Recommended Sequence</button>
+                            <button class="btn btn-success" id="completeCleaningBtn">Complete Step</button>
+                        </div>
+                        <div id="actionGrid" class="action-grid"></div>
+                        <div class="response-box">
+                            <h3>Cleaning Feedback</h3>
+                            <div id="cleaningFeedback" class="structured-box empty-state">No action feedback yet.</div>
+                        </div>
+                        <div class="response-box">
+                            <h3>Nurse Responses</h3>
+                            <div id="nurseResponses" class="message-stream empty-state">No nurse response yet.</div>
+                        </div>
                     </div>
                 </div>
-            </div>
+            </section>
 
-            <div class="action-bar">
-                <button class="btn btn-success btn-large" onclick="finishStep('assessment')">
-                    Finish Assessment Step &#8594;
-                </button>
-            </div>
-        </div>
-
-        <!-- CLEANING AND DRESSING Step -->
-        <div class="screen" id="cleaningAndDressingScreen" style="display: none;">
-            <div class="step-header">
-                <h2>Step 3: Cleaning &amp; Dressing Preparation</h2>
-                <p>Prepare for the wound cleaning and dressing. Perform all required preparation actions.</p>
-                <div class="step-reminder">
-                    <strong>&#9432; Note:</strong> You will receive feedback after each action. A summary will be provided when you finish the step.
+            <aside class="log-panel">
+                <div class="panel">
+                    <div class="panel-header">
+                        <h2>Structured Backend Response</h2>
+                    </div>
+                    <pre id="structuredResponse" class="json-view empty-state">No backend response yet.</pre>
                 </div>
-            </div>
-
-            <div class="main-content">
-                <!-- Actions Area -->
-                <div class="card">
-                    <h3>Preparation Actions</h3>
-
-                    <div class="actions-counter">
-                        <strong>Actions Completed:</strong> <span id="actionCounter">0</span>
+                <div class="panel log-panel-fill">
+                    <div class="panel-header">
+                        <h2>WebSocket Log</h2>
+                        <button class="btn btn-secondary btn-small" id="clearLogBtn">Clear</button>
                     </div>
-
-                    <div class="real-time-feedback-box" id="realtimeFeedback">
-                        <strong>Real-Time Feedback:</strong>
-                        <p class="text-muted">Perform actions to receive feedback...</p>
-                    </div>
-
-                    <div class="actions-grid" id="cleaningAndDressingActions">
-                        <!-- Action buttons loaded dynamically -->
+                    <div id="logConsole" class="log-console">
+                        <div class="empty-state">No WebSocket traffic yet.</div>
                     </div>
                 </div>
+            </aside>
+        </main>
 
-                <!-- Staff Nurse Communication -->
-                <div class="card">
-                    <h3>Staff Nurse</h3>
-
-                    <div class="staff-nurse-response" id="staffNurseCleaningAndDressing">
-                        <p class="text-muted">Talk to the staff nurse...</p>
-                    </div>
-
-                    <div class="voice-controls">
-                        <button class="btn btn-record" id="nurseRecordButtonCleaning" onclick="toggleNurseRecording()">
-                            🎤 Record Message
-                        </button>
-                        <span class="recording-status" id="nurseRecordingStatusCleaning">Not recording</span>
-                    </div>
-
-                    <div class="input-group">
-                        <input
-                            type="text"
-                            id="nurseQuestionCleaningAndDressing"
-                            placeholder="Talk to the staff nurse..."
-                            onkeypress="handleEnter(event, askStaffNurse)"
-                        >
-                        <button class="btn btn-primary" onclick="askStaffNurse()">
-                            Send
-                        </button>
-                    </div>
-                </div>
-            </div>
-
-            <div class="action-bar">
-                <button class="btn btn-success btn-large" onclick="finishStep('cleaning_and_dressing')">
-                    Finish Preparation Step &#8594;
-                </button>
-            </div>
-        </div>
-
-        <!-- Feedback Modal -->
-        <div class="modal" id="feedbackModal" style="display: none;">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h2>Step Feedback</h2>
-                </div>
-
-                <div class="modal-body" id="feedbackContent">
-                    <!-- Feedback inserted dynamically -->
-                </div>
-
-                <div class="modal-footer">
-                    <button class="btn btn-primary btn-large" onclick="continueToNextStep()">
-                        Continue to Next Step &#8594;
-                    </button>
-                </div>
-            </div>
-        </div>
-
-        <!-- Completion Screen -->
-        <div class="screen" id="completionScreen" style="display: none;">
-            <div class="card completion-card">
-                <h2>&#127881; Session Complete!</h2>
-                <p>Congratulations! You have completed all procedural steps.</p>
-
-                <div class="completion-summary" id="completionSummary">
-                    <!-- Final summary shown dynamically -->
-                </div>
-
-                <button class="btn btn-primary btn-large" onclick="location.reload()">
-                    Start New Session
-                </button>
-            </div>
-        </div>
-
-        <!-- Loading Spinner -->
-        <div class="loading" id="loadingSpinner" style="display: none;">
-            <div class="spinner"></div>
-            <p>Processing...</p>
-        </div>
+        <footer class="footer-bar">
+            <button class="btn btn-secondary" id="refreshSessionDetailsBtn">Refresh Session Details</button>
+            <button class="btn btn-primary" id="exportJsonBtn">Export Session Log as JSON</button>
+        </footer>
     </div>
 
     <script src="app.js"></script>
