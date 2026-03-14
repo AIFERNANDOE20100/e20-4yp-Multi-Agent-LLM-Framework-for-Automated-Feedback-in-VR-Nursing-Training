@@ -1,0 +1,62 @@
+[
+  {
+    "id": "sample_01",
+    "audio_file": "stt_samples/sample_01.wav",
+    "text": "Hello I am your nurse today"
+  },
+  {
+    "id": "sample_02",
+    "audio_file": "stt_samples/sample_02.wav",
+    "text": "Do you have any allergies"
+  },
+  {
+    "id": "sample_03",
+    "audio_file": "stt_samples/sample_03.wav",
+    "text": "How much pain are you feeling"
+  },
+  {
+    "id": "sample_04",
+    "audio_file": "stt_samples/sample_04.wav",
+    "text": "Can you confirm your full name and date of birth"
+  },
+  {
+    "id": "sample_05",
+    "audio_file": "stt_samples/sample_05.wav",
+    "text": "I will explain the wound care procedure before we begin"
+  },
+  {
+    "id": "sample_06",
+    "audio_file": "stt_samples/sample_06.wav",
+    "text": "Do you have diabetes or any medical history that affects healing"
+  },
+  {
+    "id": "sample_07",
+    "audio_file": "stt_samples/sample_07.wav",
+    "text": "Please let me know if the wound dressing feels uncomfortable"
+  },
+  {
+    "id": "sample_08",
+    "audio_file": "stt_samples/sample_08.wav",
+    "text": "I am going to clean the trolley and arrange the sterile materials"
+  },
+  {
+    "id": "sample_09",
+    "audio_file": "stt_samples/sample_09.wav",
+    "text": "Could you tell me if you are allergic to penicillin or latex"
+  },
+  {
+    "id": "sample_10",
+    "audio_file": "stt_samples/sample_10.wav",
+    "text": "Your blood sugar control is important for safe wound healing"
+  },
+  {
+    "id": "sample_11",
+    "audio_file": "stt_samples/sample_11.wav",
+    "text": "I need to verify the cleaning solution with the staff nurse"
+  },
+  {
+    "id": "sample_12",
+    "audio_file": "stt_samples/sample_12.wav",
+    "text": "The sterile dressing packet must remain sealed and intact"
+  }
+]

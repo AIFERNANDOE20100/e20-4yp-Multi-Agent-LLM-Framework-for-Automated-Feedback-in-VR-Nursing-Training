@@ -1,0 +1,57 @@
+HISTORY TAKING - DIABETIC PATIENT CONSIDERATIONS
+
+WHY DIABETES MATTERS IN HISTORY TAKING
+Diabetes impairs wound healing and increases infection risk because hyperglycaemia weakens immune function and slows tissue repair. In a post-operative wound patient, identifying diabetes during history taking is essential for safe planning and evaluation.
+Students must identify diabetes as a wound-healing risk factor during the history step. If diabetes is present but not explored, the history is incomplete and the risk_factor_assessed item should not be considered achieved.
+HbA1c and day-to-day blood glucose control directly affect healing outcomes. Poor glycaemic control is associated with delayed collagen synthesis, prolonged inflammation, and higher wound complication rates.
+Peripheral neuropathy may mask pain, so students should not assume low pain means low risk. They should ask carefully about sensation, numbness, tingling, and whether pain responses feel reduced or unusual.
+Peripheral vascular disease reduces blood supply to wound sites and can significantly delay recovery. Students should recognise that impaired circulation increases the risk of delayed healing and infection.
+
+ADDITIONAL HISTORY QUESTIONS FOR DIABETIC PATIENTS
+Ask whether the patient has diabetes and how long they have been diagnosed. Duration of diabetes can help indicate the likelihood of chronic complications affecting healing.
+Ask about blood glucose control, including whether the patient considers their diabetes well controlled or poorly controlled. This helps identify whether the wound is at elevated healing and infection risk.
+Ask about current diabetic medications, including insulin type, insulin schedule, and oral hypoglycaemic agents. Medication details help establish current treatment and whether glucose management may affect wound recovery.
+Ask about diabetic complications such as neuropathy, retinopathy, nephropathy, and peripheral vascular disease. These complications can change how the patient presents and how safely wound care can proceed.
+Ask about any previous wound healing problems, delayed recovery after surgery, or diabetic foot history. Prior poor healing is a strong indicator that this patient may need closer attention to risk factors.
+Ask whether the patient knows their HbA1c or recent blood glucose trends. Even if the patient cannot give exact numbers, asking the question demonstrates safe, risk-aware history taking.
+
+EVALUATION CRITERION: risk_factor_assessed
+The flag risk_factor_assessed is TRUE if the student asked about any condition affecting wound healing such as diabetes, blood sugar, glucose control, HbA1c, diabetic complications, neuropathy, or peripheral vascular disease. These questions show the student recognised diabetes as clinically relevant to wound care.
+For diabetic patients, risk_factor_assessed is a mandatory additional history item. It is not optional enrichment; it is part of safe assessment for this scenario.
+Failure to assess diabetic wound-healing risk factors represents a patient safety gap. The student has missed information that directly affects infection risk, recovery time, and communication with the patient.
+
+ALLERGY ASSESSMENT IN DIABETIC PATIENTS
+Diabetic patients may have drug sensitivities or treatment-related allergies that affect wound care planning. Students should assess medication allergies carefully, especially when the patient uses multiple long-term medicines.
+Allergy assessment is weighted more heavily in diabetic patients because medication burden is often higher and errors can have greater consequences. Allergy checking remains a critical part of safe preparation for wound care.
+Always confirm allergies before wound care in diabetic patients. A complete history must include allergy status before any dressing materials or wound-care products are used.
+
+CLEANING AND DRESSING PREPARATION - DIABETIC PATIENT CONSIDERATIONS
+
+WHY PREPARATION IS MORE CRITICAL FOR DIABETIC PATIENTS
+Diabetic patients have impaired neutrophil chemotaxis and phagocytosis, which reduces infection defence at the wound site. This means preventable contamination is more dangerous than in a patient without diabetes.
+Any lapse in aseptic technique carries higher consequences because the patient's immune response is less effective. Small preparation errors can become clinically significant wound complications.
+Wound contamination is harder to recover from in diabetic patients because infection clearance is reduced and tissue repair is slower. Safe preparation is therefore a major protective step, not a routine formality.
+Delayed healing means any infection has longer to establish and spread before the wound closes effectively. Every prevention-focused action in preparation has increased importance in this scenario.
+
+HAND HYGIENE - ELEVATED IMPORTANCE
+action_initial_hand_hygiene is critical before ANY equipment contact. In a diabetic patient, touching equipment with contaminated hands creates an avoidable infection pathway before wound care even begins.
+action_hand_hygiene_after_cleaning prevents re-contamination after contact with the trolley and cleaning surfaces. This second hand hygiene step is essential because diabetic patients are less able to tolerate microbial exposure.
+In diabetic patients, even minor contamination can escalate to a serious wound infection. Students should understand that both hand hygiene points exist to protect a patient with impaired infection defence.
+Skipping any hand hygiene step is a critical safety violation. Omission of action_initial_hand_hygiene or action_hand_hygiene_after_cleaning should be treated as a serious lapse in infection prevention.
+
+MATERIAL VERIFICATION - ELEVATED IMPORTANCE
+action_verify_solution with the staff nurse is mandatory before the cleaning solution is used in the workflow. Verification confirms the solution is correct, safe, and suitable for a patient at higher infection risk.
+action_verify_dressing with the staff nurse is mandatory before the dressing packet is accepted into the sterile preparation process. Sterility and integrity must be confirmed explicitly, not assumed.
+Using expired or compromised materials in a diabetic patient significantly increases infection risk because the patient's immune defence and wound healing response are already impaired. Verification is therefore a key patient safety control.
+Sterility of dressing materials must be confirmed, and any doubt means reject the item. If the packet is wet, torn, damaged, or questionable, it should not be accepted for this patient.
+
+CORRECT SEQUENCING
+All preparation steps must be completed in the correct sequence. Each prerequisite action protects the patient from contamination, omission, or material error.
+Skipping steps in a diabetic patient is especially dangerous because there is less physiological reserve to compensate for infection or delayed healing. Sequence compliance is part of infection prevention.
+The infection risk window is larger for diabetic patients because delayed healing prolongs vulnerability at the wound site. Correct sequencing reduces opportunities for contamination to occur.
+Every prerequisite action exists to protect this patient. If a student jumps ahead without completing earlier steps, the system should explain the missing safety logic clearly and directly.
+
+CLINICAL REASONING FOR REAL-TIME FEEDBACK
+When a student skips action_initial_hand_hygiene before touching equipment in a diabetic patient, explain that impaired immune function makes contamination far more dangerous. Emphasise that the missing hand hygiene step increases infection risk before wound care begins.
+When a student skips action_verify_solution or action_verify_dressing, explain that using unverified materials risks infection in a patient whose body cannot fight contamination effectively. Real-time feedback should connect the missing verification step to diabetic vulnerability.
+When a student skips action_hand_hygiene_after_cleaning, explain that re-contamination of a diabetic patient's wound environment is a serious safety risk. The student should understand that cleaning the trolley does not remove the need to decontaminate hands again.

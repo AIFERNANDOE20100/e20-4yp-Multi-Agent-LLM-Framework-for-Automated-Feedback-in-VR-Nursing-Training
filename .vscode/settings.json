@@ -1,0 +1,6 @@
+{
+    "python.analysis.extraPaths": [
+        "./kushan/backend",
+        "./Backend_WoundCareSim"
+    ]
+}

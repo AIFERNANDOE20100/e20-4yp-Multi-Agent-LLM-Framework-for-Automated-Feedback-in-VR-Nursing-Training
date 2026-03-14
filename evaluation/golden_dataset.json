@@ -1,0 +1,555 @@
+[
+  {
+    "id": "case_01",
+    "category": "full_coverage",
+    "transcript": [
+      "Hello Mr. Perera, I am your nurse today.",
+      "Can you confirm your full name and date of birth for me?",
+      "Do you have any allergies to medicines or dressings?",
+      "How much pain are you feeling around the wound right now?",
+      "Do you have any other medical conditions I should know about?",
+      "I am going to inspect and prepare your wound dressing area before we continue."
+    ],
+    "expected_flags": {
+      "identity_asked": true,
+      "allergies_asked": true,
+      "pain_assessed": true,
+      "medical_history_asked": true,
+      "procedure_explained": true,
+      "risk_factor_assessed": false
+    },
+    "expected_communication_verdict": "Appropriate",
+    "clinical_context": {
+      "risk_factors": []
+    }
+  },
+  {
+    "id": "case_02",
+    "category": "full_coverage_diabetes",
+    "transcript": [
+      "Good morning, I am your student nurse.",
+      "Could you confirm your name and hospital number?",
+      "Do you have any allergies?",
+      "What is your pain score out of ten?",
+      "Do you have diabetes or any blood sugar control problems that affect healing?",
+      "Any other medical history such as poor circulation or neuropathy?",
+      "I will explain each step before I assess the wound today."
+    ],
+    "expected_flags": {
+      "identity_asked": true,
+      "allergies_asked": true,
+      "pain_assessed": true,
+      "medical_history_asked": true,
+      "procedure_explained": true,
+      "risk_factor_assessed": true
+    },
+    "expected_communication_verdict": "Appropriate",
+    "clinical_context": {
+      "risk_factors": ["diabetes"],
+      "healing_risk": "high",
+      "infection_risk": "high"
+    }
+  },
+  {
+    "id": "case_03",
+    "category": "partial_coverage",
+    "transcript": [
+      "Hello, I am here to check on you.",
+      "Do you have any allergies?",
+      "Are you having any pain in the wound area?"
+    ],
+    "expected_flags": {
+      "identity_asked": false,
+      "allergies_asked": true,
+      "pain_assessed": true,
+      "medical_history_asked": false,
+      "procedure_explained": false,
+      "risk_factor_assessed": false
+    },
+    "expected_communication_verdict": "Appropriate",
+    "clinical_context": {
+      "risk_factors": []
+    }
+  },
+  {
+    "id": "case_04",
+    "category": "minimal_coverage",
+    "transcript": [
+      "Hi.",
+      "Any pain?"
+    ],
+    "expected_flags": {
+      "identity_asked": false,
+      "allergies_asked": false,
+      "pain_assessed": true,
+      "medical_history_asked": false,
+      "procedure_explained": false,
+      "risk_factor_assessed": false
+    },
+    "expected_communication_verdict": "Partially Appropriate",
+    "clinical_context": {
+      "risk_factors": []
+    }
+  },
+  {
+    "id": "case_05",
+    "category": "communication_variation",
+    "transcript": [
+      "Tell me your name.",
+      "Any allergies?",
+      "Pain level?",
+      "We need to get this over with."
+    ],
+    "expected_flags": {
+      "identity_asked": true,
+      "allergies_asked": true,
+      "pain_assessed": true,
+      "medical_history_asked": false,
+      "procedure_explained": false,
+      "risk_factor_assessed": false
+    },
+    "expected_communication_verdict": "Partially Appropriate",
+    "clinical_context": {
+      "risk_factors": []
+    }
+  },
+  {
+    "id": "case_06",
+    "category": "off_topic",
+    "transcript": [
+      "The weather is very hot today.",
+      "Did you watch the cricket match last night?"
+    ],
+    "expected_flags": {
+      "identity_asked": false,
+      "allergies_asked": false,
+      "pain_assessed": false,
+      "medical_history_asked": false,
+      "procedure_explained": false,
+      "risk_factor_assessed": false
+    },
+    "expected_communication_verdict": "Inappropriate",
+    "clinical_context": {
+      "risk_factors": []
+    }
+  },
+  {
+    "id": "case_07",
+    "category": "full_coverage",
+    "transcript": [
+      "Hello, I am your nurse and I would like to check your wound safely.",
+      "Could you confirm your full name for me?",
+      "Have you had any allergies to tapes, iodine, or medications?",
+      "What pain score would you give the wound right now?",
+      "Have you had any previous surgery or medical problems related to healing?",
+      "I will explain the wound-care procedure before I continue."
+    ],
+    "expected_flags": {
+      "identity_asked": true,
+      "allergies_asked": true,
+      "pain_assessed": true,
+      "medical_history_asked": true,
+      "procedure_explained": true,
+      "risk_factor_assessed": false
+    },
+    "expected_communication_verdict": "Appropriate",
+    "clinical_context": {
+      "risk_factors": []
+    }
+  },
+  {
+    "id": "case_08",
+    "category": "partial_coverage_diabetes",
+    "transcript": [
+      "Hello, I am your student nurse.",
+      "Can you confirm your identity for me?",
+      "Are you allergic to anything?",
+      "Do you have diabetes?"
+    ],
+    "expected_flags": {
+      "identity_asked": true,
+      "allergies_asked": true,
+      "pain_assessed": false,
+      "medical_history_asked": false,
+      "procedure_explained": false,
+      "risk_factor_assessed": true
+    },
+    "expected_communication_verdict": "Appropriate",
+    "clinical_context": {
+      "risk_factors": ["diabetes"],
+      "healing_risk": "high",
+      "infection_risk": "high"
+    }
+  },
+  {
+    "id": "case_09",
+    "category": "short_conversation",
+    "transcript": [
+      "Hello.",
+      "Do you have allergies?"
+    ],
+    "expected_flags": {
+      "identity_asked": false,
+      "allergies_asked": true,
+      "pain_assessed": false,
+      "medical_history_asked": false,
+      "procedure_explained": false,
+      "risk_factor_assessed": false
+    },
+    "expected_communication_verdict": "Partially Appropriate",
+    "clinical_context": {
+      "risk_factors": []
+    }
+  },
+  {
+    "id": "case_10",
+    "category": "communication_variation",
+    "transcript": [
+      "Hey, what is your name?",
+      "Any allergies?",
+      "How bad is the pain?",
+      "Answer quickly."
+    ],
+    "expected_flags": {
+      "identity_asked": true,
+      "allergies_asked": true,
+      "pain_assessed": true,
+      "medical_history_asked": false,
+      "procedure_explained": false,
+      "risk_factor_assessed": false
+    },
+    "expected_communication_verdict": "Inappropriate",
+    "clinical_context": {
+      "risk_factors": []
+    }
+  },
+  {
+    "id": "case_11",
+    "category": "partial_coverage",
+    "transcript": [
+      "Good afternoon, I am your nurse today.",
+      "Could you tell me about any medical conditions you have?",
+      "Do you have pain around the wound?"
+    ],
+    "expected_flags": {
+      "identity_asked": false,
+      "allergies_asked": false,
+      "pain_assessed": true,
+      "medical_history_asked": true,
+      "procedure_explained": false,
+      "risk_factor_assessed": false
+    },
+    "expected_communication_verdict": "Appropriate",
+    "clinical_context": {
+      "risk_factors": []
+    }
+  },
+  {
+    "id": "case_12",
+    "category": "minimal_coverage",
+    "transcript": [
+      "Name?",
+      "Any medical problems?"
+    ],
+    "expected_flags": {
+      "identity_asked": true,
+      "allergies_asked": false,
+      "pain_assessed": false,
+      "medical_history_asked": true,
+      "procedure_explained": false,
+      "risk_factor_assessed": false
+    },
+    "expected_communication_verdict": "Partially Appropriate",
+    "clinical_context": {
+      "risk_factors": []
+    }
+  },
+  {
+    "id": "case_13",
+    "category": "full_coverage_diabetes",
+    "transcript": [
+      "Hello Mrs. Silva, I am your nurse.",
+      "Can you confirm your name and date of birth?",
+      "Do you have any allergies?",
+      "What pain score would you give the wound?",
+      "Have your sugars been controlled recently, and do you have diabetes-related complications?",
+      "Do you have any other medical history that affects healing?",
+      "I am going to explain the wound-care procedure before I start."
+    ],
+    "expected_flags": {
+      "identity_asked": true,
+      "allergies_asked": true,
+      "pain_assessed": true,
+      "medical_history_asked": true,
+      "procedure_explained": true,
+      "risk_factor_assessed": true
+    },
+    "expected_communication_verdict": "Appropriate",
+    "clinical_context": {
+      "risk_factors": ["diabetes"],
+      "healing_risk": "high",
+      "infection_risk": "high"
+    }
+  },
+  {
+    "id": "case_14",
+    "category": "edge_case_no_student_question",
+    "transcript": [],
+    "expected_flags": {
+      "identity_asked": false,
+      "allergies_asked": false,
+      "pain_assessed": false,
+      "medical_history_asked": false,
+      "procedure_explained": false,
+      "risk_factor_assessed": false
+    },
+    "expected_communication_verdict": "Inappropriate",
+    "clinical_context": {
+      "risk_factors": []
+    }
+  },
+  {
+    "id": "case_15",
+    "category": "partial_coverage",
+    "transcript": [
+      "Hello, I am here to prepare you for wound care.",
+      "Can you confirm your identity?",
+      "I will explain what I am doing as we go."
+    ],
+    "expected_flags": {
+      "identity_asked": true,
+      "allergies_asked": false,
+      "pain_assessed": false,
+      "medical_history_asked": false,
+      "procedure_explained": true,
+      "risk_factor_assessed": false
+    },
+    "expected_communication_verdict": "Appropriate",
+    "clinical_context": {
+      "risk_factors": []
+    }
+  },
+  {
+    "id": "case_16",
+    "category": "communication_variation",
+    "transcript": [
+      "Listen carefully, I need your name.",
+      "Do you have any allergies or not?",
+      "What is your pain number?",
+      "I do not have time for long answers."
+    ],
+    "expected_flags": {
+      "identity_asked": true,
+      "allergies_asked": true,
+      "pain_assessed": true,
+      "medical_history_asked": false,
+      "procedure_explained": false,
+      "risk_factor_assessed": false
+    },
+    "expected_communication_verdict": "Inappropriate",
+    "clinical_context": {
+      "risk_factors": []
+    }
+  },
+  {
+    "id": "case_17",
+    "category": "partial_coverage_diabetes",
+    "transcript": [
+      "Good morning.",
+      "Are you in much pain today?",
+      "Do you have diabetes or trouble with wound healing?"
+    ],
+    "expected_flags": {
+      "identity_asked": false,
+      "allergies_asked": false,
+      "pain_assessed": true,
+      "medical_history_asked": false,
+      "procedure_explained": false,
+      "risk_factor_assessed": true
+    },
+    "expected_communication_verdict": "Appropriate",
+    "clinical_context": {
+      "risk_factors": ["diabetes"],
+      "healing_risk": "high",
+      "infection_risk": "high"
+    }
+  },
+  {
+    "id": "case_18",
+    "category": "minimal_coverage",
+    "transcript": [
+      "I am your nurse.",
+      "Pain?"
+    ],
+    "expected_flags": {
+      "identity_asked": false,
+      "allergies_asked": false,
+      "pain_assessed": true,
+      "medical_history_asked": false,
+      "procedure_explained": false,
+      "risk_factor_assessed": false
+    },
+    "expected_communication_verdict": "Partially Appropriate",
+    "clinical_context": {
+      "risk_factors": []
+    }
+  },
+  {
+    "id": "case_19",
+    "category": "full_coverage",
+    "transcript": [
+      "Hello, I am the nursing student looking after you today.",
+      "Please confirm your full name and date of birth.",
+      "Have you had any allergies to medication, latex, or dressings?",
+      "How severe is your pain at the moment?",
+      "Do you have any medical problems such as hypertension or previous wound infections?",
+      "I will explain the wound assessment procedure before I begin."
+    ],
+    "expected_flags": {
+      "identity_asked": true,
+      "allergies_asked": true,
+      "pain_assessed": true,
+      "medical_history_asked": true,
+      "procedure_explained": true,
+      "risk_factor_assessed": false
+    },
+    "expected_communication_verdict": "Appropriate",
+    "clinical_context": {
+      "risk_factors": []
+    }
+  },
+  {
+    "id": "case_20",
+    "category": "off_topic",
+    "transcript": [
+      "I need to finish this quickly.",
+      "Where do you live?",
+      "What is your favorite food?"
+    ],
+    "expected_flags": {
+      "identity_asked": false,
+      "allergies_asked": false,
+      "pain_assessed": false,
+      "medical_history_asked": false,
+      "procedure_explained": false,
+      "risk_factor_assessed": false
+    },
+    "expected_communication_verdict": "Inappropriate",
+    "clinical_context": {
+      "risk_factors": []
+    }
+  },
+  {
+    "id": "case_21",
+    "category": "partial_coverage_diabetes",
+    "transcript": [
+      "Hello, I am your student nurse.",
+      "Could you confirm your name for me?",
+      "Have you got diabetes, and has your blood sugar been stable?",
+      "I will explain the next steps before I inspect the wound."
+    ],
+    "expected_flags": {
+      "identity_asked": true,
+      "allergies_asked": false,
+      "pain_assessed": false,
+      "medical_history_asked": false,
+      "procedure_explained": true,
+      "risk_factor_assessed": true
+    },
+    "expected_communication_verdict": "Appropriate",
+    "clinical_context": {
+      "risk_factors": ["diabetes"],
+      "healing_risk": "high",
+      "infection_risk": "high"
+    }
+  },
+  {
+    "id": "case_22",
+    "category": "partial_coverage",
+    "transcript": [
+      "Hi, I am your nurse.",
+      "Do you have any allergies?",
+      "Have you had surgery before?"
+    ],
+    "expected_flags": {
+      "identity_asked": false,
+      "allergies_asked": true,
+      "pain_assessed": false,
+      "medical_history_asked": true,
+      "procedure_explained": false,
+      "risk_factor_assessed": false
+    },
+    "expected_communication_verdict": "Appropriate",
+    "clinical_context": {
+      "risk_factors": []
+    }
+  },
+  {
+    "id": "case_23",
+    "category": "communication_variation",
+    "transcript": [
+      "State your name.",
+      "Do you have allergies?",
+      "Tell me your pain score.",
+      "I will explain the wound check now."
+    ],
+    "expected_flags": {
+      "identity_asked": true,
+      "allergies_asked": true,
+      "pain_assessed": true,
+      "medical_history_asked": false,
+      "procedure_explained": true,
+      "risk_factor_assessed": false
+    },
+    "expected_communication_verdict": "Partially Appropriate",
+    "clinical_context": {
+      "risk_factors": []
+    }
+  },
+  {
+    "id": "case_24",
+    "category": "minimal_coverage",
+    "transcript": [
+      "Any allergies or pain?"
+    ],
+    "expected_flags": {
+      "identity_asked": false,
+      "allergies_asked": true,
+      "pain_assessed": true,
+      "medical_history_asked": false,
+      "procedure_explained": false,
+      "risk_factor_assessed": false
+    },
+    "expected_communication_verdict": "Partially Appropriate",
+    "clinical_context": {
+      "risk_factors": []
+    }
+  },
+  {
+    "id": "case_25",
+    "category": "full_coverage_diabetes",
+    "transcript": [
+      "Good evening, I am your nurse and I will care for your wound safely.",
+      "Can you confirm your full name and date of birth?",
+      "Do you have any allergies to medicines or dressing materials?",
+      "How severe is your pain right now?",
+      "Because diabetes can slow healing, have your glucose levels been controlled and have you noticed numbness or poor circulation?",
+      "Do you have any other medical history that could affect recovery?",
+      "I will explain the procedure clearly before we begin."
+    ],
+    "expected_flags": {
+      "identity_asked": true,
+      "allergies_asked": true,
+      "pain_assessed": true,
+      "medical_history_asked": true,
+      "procedure_explained": true,
+      "risk_factor_assessed": true
+    },
+    "expected_communication_verdict": "Appropriate",
+    "clinical_context": {
+      "risk_factors": ["diabetes"],
+      "healing_risk": "high",
+      "infection_risk": "high"
+    }
+  }
+]

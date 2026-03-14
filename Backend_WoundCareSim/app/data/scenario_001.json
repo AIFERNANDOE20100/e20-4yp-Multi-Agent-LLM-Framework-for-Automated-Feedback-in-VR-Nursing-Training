@@ -1,0 +1,163 @@
+{
+  "scenario_id": "scenario_001",
+  "scenario_title": "Post-Operative Clean Surgical Wound – Left Forearm",
+
+  "patient_history": {
+    "name": "Mr. Sunil Perera",
+    "age": 52,
+    "gender": "Male",
+    "address": "No. 45, Kandy Road, Hindagala, Kandy",
+
+    "medical_history": [
+      "Hypertension"
+    ],
+
+    "allergies": [
+      "Penicillin (causes rash and itching)",
+      "Latex (causes skin irritation)"
+    ],
+
+    "current_medications": [
+      "Amlodipine 5mg daily (for hypertension)"
+    ],
+
+    "surgery_details": {
+      "procedure": "Open reduction and internal fixation of left forearm fracture",
+      "date": "2025-02-03",
+      "surgeon": "Dr. K. Fernando",
+      "reason": "Fractured left forearm from a fall at home",
+      "hospital": "Teaching Hospital Kandy"
+    },
+
+    "pain_level": {
+      "description": "Mild to moderate pain at the surgical site",
+      "pain_score": 4,
+      "pain_characteristics": "Dull, achy pain that worsens with movement",
+      "pain_medication": "Paracetamol 500mg as needed",
+      "last_pain_medication": "6 hours ago"
+    },
+
+    "comfort_needs": {
+      "current_position": "Sitting upright in bed",
+      "needs_bathroom": false,
+      "needs_water": false,
+      "comfortable_to_proceed": true
+    }
+  },
+
+  "wound_details": {
+    "location": "Left forearm, external surface (lateral aspect)",
+    "wound_type": "Clean surgical wound (Class I)",
+    "appearance": "Sutured incision with no visible discharge",
+    "size": "Approximately 8 cm linear incision",
+    "wound_age": "5 days post-operative",
+    "suture_type": "Non-absorbable interrupted sutures",
+    "expected_healing": "Primary intention healing",
+    "dressing_status": "Primary dressing in place, appears dry and intact"
+  },
+
+  "assessment_questions": [
+    {
+      "id": "q1",
+      "question": "What is the type of wound shown in the scenario?",
+      "options": [
+        "Surgical wound",
+        "Trauma wound",
+        "Burn",
+        "Infected wound"
+      ],
+      "correct_answer": "Surgical wound",
+      "explanation": "A surgical wound is intentionally created under sterile conditions during a medical procedure using instruments such as a scalpel. It typically has clean edges and minimal contamination. In this scenario, the wound resulted from a surgical procedure, classifying it as a clean surgical wound (Class I)."
+    },
+    {
+      "id": "q2",
+      "question": "What is the anatomical location of the wound?",
+      "options": [
+        "Anterior aspect of the right lower leg (tibia region)",
+        "Posterior aspect of the right thigh",
+        "Lateral side of the left ankle",
+        "External surface of the left forearm"
+      ],
+      "correct_answer": "External surface of the left forearm",
+      "explanation": "The external surface of the left forearm refers to the outer aspect of the lower arm. This is a common site for surgical incisions related to orthopedic or minor surgical procedures."
+    },
+    {
+      "id": "q3",
+      "question": "What is the exudate amount when the primary dressing is unmarked?",
+      "options": [
+        "Dry",
+        "Moist",
+        "Wet",
+        "Saturated"
+      ],
+      "correct_answer": "Dry",
+      "explanation": "An unmarked primary dressing indicates the absence of visible wound drainage. This is documented as a dry wound, which is common in clean, healing surgical wounds."
+    },
+    {
+      "id": "q4",
+      "question": "What is the exudate type when the fluid is clear or straw-coloured?",
+      "options": [
+        "Serous",
+        "Haemoserous",
+        "Sanguineous",
+        "Purulent"
+      ],
+      "correct_answer": "Serous",
+      "explanation": "Serous exudate is clear or straw-coloured and is typically seen in normal wound healing. It indicates the absence of infection and inflammation."
+    },
+    {
+      "id": "q5",
+      "question": "Which of the following describes normal exudate consistency?",
+      "options": [
+        "High viscosity (thick, sometimes sticky)",
+        "Low viscosity (thin, \"runny\")",
+        "Normal (serous)",
+        "Other"
+      ],
+      "correct_answer": "Normal (serous)",
+      "explanation": "Normal wound exudate is serous in nature, meaning it is watery, clear, and of low viscosity. Thick or cloudy exudate may suggest infection or delayed healing."
+    },
+    {
+      "id": "q6",
+      "question": "Which colour is typically associated with healthy granulation tissue?",
+      "options": [
+        "Pink",
+        "Dusky",
+        "Red",
+        "Brown"
+      ],
+      "correct_answer": "Pink",
+      "explanation": "Healthy granulation tissue appears pink due to adequate blood supply and active tissue regeneration. Dusky or dark colours may indicate compromised circulation or tissue damage."
+    },
+    {
+      "id": "q7",
+      "question": "What is the normal temperature condition of the skin surrounding a wound?",
+      "options": [
+        "Normal",
+        "High",
+        "Low",
+        "Variable"
+      ],
+      "correct_answer": "Normal",
+      "explanation": "Normal skin temperature around a wound suggests healthy circulation. Increased temperature may indicate infection, while decreased temperature can indicate impaired blood flow."
+    },
+    {
+      "id": "q8",
+      "question": "Are there signs of wound infection (e.g., pyrexia, localized pain, erythema, oedema)?",
+      "options": [
+        "No",
+        "Pyrexia",
+        "Localized pain",
+        "Erythema"
+      ],
+      "correct_answer": "No",
+      "explanation": "In this scenario, the wound shows no signs of infection such as fever, redness, swelling, or abnormal pain, confirming that it is a clean, healing surgical wound."
+    }
+  ],
+
+  "vector_store_namespace": "scenario_001",
+
+  "created_by": "system",
+  "created_at": "2025-01-20T10:00:00Z",
+  "updated_at": "2025-02-08T12:00:00Z"
+}

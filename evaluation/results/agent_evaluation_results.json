@@ -1,0 +1,2610 @@
+{
+  "dataset_size": 25,
+  "runs_per_case": 5,
+  "summary": {
+    "knowledge_metrics": {
+      "tp": 65,
+      "fp": 3,
+      "fn": 4,
+      "tn": 78,
+      "precision": 0.9558823529411765,
+      "recall": 0.9420289855072463,
+      "f1": 0.9489051094890512
+    },
+    "communication_accuracy": 0.32,
+    "communication_confusion_matrix": {
+      "labels": [
+        "Appropriate",
+        "Partially Appropriate",
+        "Inappropriate"
+      ],
+      "matrix": [
+        [
+          0,
+          13,
+          0
+        ],
+        [
+          0,
+          5,
+          2
+        ],
+        [
+          0,
+          2,
+          3
+        ]
+      ]
+    },
+    "overall_consistency_rate": 0.864,
+    "inconsistent_cases": [
+      {
+        "id": "case_05",
+        "category": "communication_variation",
+        "consistency_rate": 0.6,
+        "majority_communication_verdict": "Inappropriate"
+      },
+      {
+        "id": "case_06",
+        "category": "off_topic",
+        "consistency_rate": 0.8,
+        "majority_communication_verdict": "Partially Appropriate"
+      },
+      {
+        "id": "case_10",
+        "category": "communication_variation",
+        "consistency_rate": 0.6,
+        "majority_communication_verdict": "Partially Appropriate"
+      },
+      {
+        "id": "case_11",
+        "category": "partial_coverage",
+        "consistency_rate": 0.8,
+        "majority_communication_verdict": "Partially Appropriate"
+      },
+      {
+        "id": "case_12",
+        "category": "minimal_coverage",
+        "consistency_rate": 0.8,
+        "majority_communication_verdict": "Inappropriate"
+      },
+      {
+        "id": "case_15",
+        "category": "partial_coverage",
+        "consistency_rate": 0.6,
+        "majority_communication_verdict": "Partially Appropriate"
+      },
+      {
+        "id": "case_19",
+        "category": "full_coverage",
+        "consistency_rate": 0.6,
+        "majority_communication_verdict": "Partially Appropriate"
+      },
+      {
+        "id": "case_20",
+        "category": "off_topic",
+        "consistency_rate": 0.8,
+        "majority_communication_verdict": "Inappropriate"
+      },
+      {
+        "id": "case_21",
+        "category": "partial_coverage_diabetes",
+        "consistency_rate": 0.8,
+        "majority_communication_verdict": "Partially Appropriate"
+      },
+      {
+        "id": "case_22",
+        "category": "partial_coverage",
+        "consistency_rate": 0.8,
+        "majority_communication_verdict": "Partially Appropriate"
+      },
+      {
+        "id": "case_25",
+        "category": "full_coverage_diabetes",
+        "consistency_rate": 0.4,
+        "majority_communication_verdict": "Partially Appropriate"
+      }
+    ]
+  },
+  "cases": [
+    {
+      "id": "case_01",
+      "category": "full_coverage",
+      "expected_flags": {
+        "identity_asked": true,
+        "allergies_asked": true,
+        "pain_assessed": true,
+        "medical_history_asked": true,
+        "procedure_explained": true,
+        "risk_factor_assessed": false
+      },
+      "expected_communication_verdict": "Appropriate",
+      "clinical_context": {
+        "risk_factors": []
+      },
+      "transcript": "student: Hello Mr. Perera, I am your nurse today.\nstudent: Can you confirm your full name and date of birth for me?\nstudent: Do you have any allergies to medicines or dressings?\nstudent: How much pain are you feeling around the wound right now?\nstudent: Do you have any other medical conditions I should know about?\nstudent: I am going to inspect and prepare your wound dressing area before we continue.",
+      "runs": [
+        {
+          "flags": {
+            "identity_asked": true,
+            "allergies_asked": true,
+            "pain_assessed": true,
+            "medical_history_asked": true,
+            "procedure_explained": true,
+            "risk_factor_assessed": false
+          },
+          "knowledge_confidence": 1.0,
+          "knowledge_verdict": "Appropriate",
+          "communication_verdict": "Partially Appropriate",
+          "communication_confidence": 0.9
+        },
+        {
+          "flags": {
+            "identity_asked": true,
+            "allergies_asked": true,
+            "pain_assessed": true,
+            "medical_history_asked": true,
+            "procedure_explained": true,
+            "risk_factor_assessed": false
+          },
+          "knowledge_confidence": 1.0,
+          "knowledge_verdict": "Appropriate",
+          "communication_verdict": "Partially Appropriate",
+          "communication_confidence": 0.88
+        },
+        {
+          "flags": {
+            "identity_asked": true,
+            "allergies_asked": true,
+            "pain_assessed": true,
+            "medical_history_asked": true,
+            "procedure_explained": true,
+            "risk_factor_assessed": false
+          },
+          "knowledge_confidence": 1.0,
+          "knowledge_verdict": "Appropriate",
+          "communication_verdict": "Partially Appropriate",
+          "communication_confidence": 0.9
+        },
+        {
+          "flags": {
+            "identity_asked": true,
+            "allergies_asked": true,
+            "pain_assessed": true,
+            "medical_history_asked": true,
+            "procedure_explained": true,
+            "risk_factor_assessed": false
+          },
+          "knowledge_confidence": 1.0,
+          "knowledge_verdict": "Appropriate",
+          "communication_verdict": "Partially Appropriate",
+          "communication_confidence": 0.9
+        },
+        {
+          "flags": {
+            "identity_asked": true,
+            "allergies_asked": true,
+            "pain_assessed": true,
+            "medical_history_asked": true,
+            "procedure_explained": true,
+            "risk_factor_assessed": false
+          },
+          "knowledge_confidence": 1.0,
+          "knowledge_verdict": "Appropriate",
+          "communication_verdict": "Partially Appropriate",
+          "communication_confidence": 0.88
+        }
+      ],
+      "majority_flags": {
+        "identity_asked": true,
+        "allergies_asked": true,
+        "pain_assessed": true,
+        "medical_history_asked": true,
+        "procedure_explained": true,
+        "risk_factor_assessed": false
+      },
+      "majority_communication_verdict": "Partially Appropriate",
+      "case_consistency_rate": 1.0
+    },
+    {
+      "id": "case_02",
+      "category": "full_coverage_diabetes",
+      "expected_flags": {
+        "identity_asked": true,
+        "allergies_asked": true,
+        "pain_assessed": true,
+        "medical_history_asked": true,
+        "procedure_explained": true,
+        "risk_factor_assessed": true
+      },
+      "expected_communication_verdict": "Appropriate",
+      "clinical_context": {
+        "risk_factors": [
+          "diabetes"
+        ],
+        "healing_risk": "high",
+        "infection_risk": "high"
+      },
+      "transcript": "student: Good morning, I am your student nurse.\nstudent: Could you confirm your name and hospital number?\nstudent: Do you have any allergies?\nstudent: What is your pain score out of ten?\nstudent: Do you have diabetes or any blood sugar control problems that affect healing?\nstudent: Any other medical history such as poor circulation or neuropathy?\nstudent: I will explain each step before I assess the wound today.",
+      "runs": [
+        {
+          "flags": {
+            "identity_asked": true,
+            "allergies_asked": true,
+            "pain_assessed": true,
+            "medical_history_asked": true,
+            "procedure_explained": true,
+            "risk_factor_assessed": true
+          },
+          "knowledge_confidence": 1.0,
+          "knowledge_verdict": "Partially Appropriate",
+          "communication_verdict": "Partially Appropriate",
+          "communication_confidence": 0.88
+        },
+        {
+          "flags": {
+            "identity_asked": true,
+            "allergies_asked": true,
+            "pain_assessed": true,
+            "medical_history_asked": true,
+            "procedure_explained": true,
+            "risk_factor_assessed": true
+          },
+          "knowledge_confidence": 1.0,
+          "knowledge_verdict": "Partially Appropriate",
+          "communication_verdict": "Partially Appropriate",
+          "communication_confidence": 0.86
+        },
+        {
+          "flags": {
+            "identity_asked": true,
+            "allergies_asked": true,
+            "pain_assessed": true,
+            "medical_history_asked": true,
+            "procedure_explained": true,
+            "risk_factor_assessed": true
+          },
+          "knowledge_confidence": 1.0,
+          "knowledge_verdict": "Partially Appropriate",
+          "communication_verdict": "Partially Appropriate",
+          "communication_confidence": 0.88
+        },
+        {
+          "flags": {
+            "identity_asked": true,
+            "allergies_asked": true,
+            "pain_assessed": true,
+            "medical_history_asked": true,
+            "procedure_explained": true,
+            "risk_factor_assessed": true
+          },
+          "knowledge_confidence": 1.0,
+          "knowledge_verdict": "Partially Appropriate",
+          "communication_verdict": "Partially Appropriate",
+          "communication_confidence": 0.86
+        },
+        {
+          "flags": {
+            "identity_asked": true,
+            "allergies_asked": true,
+            "pain_assessed": true,
+            "medical_history_asked": true,
+            "procedure_explained": true,
+            "risk_factor_assessed": true
+          },
+          "knowledge_confidence": 1.0,
+          "knowledge_verdict": "Partially Appropriate",
+          "communication_verdict": "Partially Appropriate",
+          "communication_confidence": 0.88
+        }
+      ],
+      "majority_flags": {
+        "identity_asked": true,
+        "allergies_asked": true,
+        "pain_assessed": true,
+        "medical_history_asked": true,
+        "procedure_explained": true,
+        "risk_factor_assessed": true
+      },
+      "majority_communication_verdict": "Partially Appropriate",
+      "case_consistency_rate": 1.0
+    },
+    {
+      "id": "case_03",
+      "category": "partial_coverage",
+      "expected_flags": {
+        "identity_asked": false,
+        "allergies_asked": true,
+        "pain_assessed": true,
+        "medical_history_asked": false,
+        "procedure_explained": false,
+        "risk_factor_assessed": false
+      },
+      "expected_communication_verdict": "Appropriate",
+      "clinical_context": {
+        "risk_factors": []
+      },
+      "transcript": "student: Hello, I am here to check on you.\nstudent: Do you have any allergies?\nstudent: Are you having any pain in the wound area?",
+      "runs": [
+        {
+          "flags": {
+            "identity_asked": false,
+            "allergies_asked": true,
+            "pain_assessed": true,
+            "medical_history_asked": false,
+            "procedure_explained": false,
+            "risk_factor_assessed": false
+          },
+          "knowledge_confidence": 1.0,
+          "knowledge_verdict": "Inappropriate",
+          "communication_verdict": "Partially Appropriate",
+          "communication_confidence": 0.89
+        },
+        {
+          "flags": {
+            "identity_asked": false,
+            "allergies_asked": true,
+            "pain_assessed": true,
+            "medical_history_asked": false,
+            "procedure_explained": false,
+            "risk_factor_assessed": false
+          },
+          "knowledge_confidence": 1.0,
+          "knowledge_verdict": "Inappropriate",
+          "communication_verdict": "Partially Appropriate",
+          "communication_confidence": 0.9
+        },
+        {
+          "flags": {
+            "identity_asked": false,
+            "allergies_asked": true,
+            "pain_assessed": true,
+            "medical_history_asked": false,
+            "procedure_explained": false,
+            "risk_factor_assessed": false
+          },
+          "knowledge_confidence": 1.0,
+          "knowledge_verdict": "Inappropriate",
+          "communication_verdict": "Partially Appropriate",
+          "communication_confidence": 0.88
+        },
+        {
+          "flags": {
+            "identity_asked": false,
+            "allergies_asked": true,
+            "pain_assessed": true,
+            "medical_history_asked": false,
+            "procedure_explained": false,
+            "risk_factor_assessed": false
+          },
+          "knowledge_confidence": 1.0,
+          "knowledge_verdict": "Inappropriate",
+          "communication_verdict": "Partially Appropriate",
+          "communication_confidence": 0.87
+        },
+        {
+          "flags": {
+            "identity_asked": false,
+            "allergies_asked": true,
+            "pain_assessed": true,
+            "medical_history_asked": false,
+            "procedure_explained": false,
+            "risk_factor_assessed": false
+          },
+          "knowledge_confidence": 1.0,
+          "knowledge_verdict": "Inappropriate",
+          "communication_verdict": "Partially Appropriate",
+          "communication_confidence": 0.9
+        }
+      ],
+      "majority_flags": {
+        "identity_asked": false,
+        "allergies_asked": true,
+        "pain_assessed": true,
+        "medical_history_asked": false,
+        "procedure_explained": false,
+        "risk_factor_assessed": false
+      },
+      "majority_communication_verdict": "Partially Appropriate",
+      "case_consistency_rate": 1.0
+    },
+    {
+      "id": "case_04",
+      "category": "minimal_coverage",
+      "expected_flags": {
+        "identity_asked": false,
+        "allergies_asked": false,
+        "pain_assessed": true,
+        "medical_history_asked": false,
+        "procedure_explained": false,
+        "risk_factor_assessed": false
+      },
+      "expected_communication_verdict": "Partially Appropriate",
+      "clinical_context": {
+        "risk_factors": []
+      },
+      "transcript": "student: Hi.\nstudent: Any pain?",
+      "runs": [
+        {
+          "flags": {
+            "identity_asked": false,
+            "allergies_asked": false,
+            "pain_assessed": true,
+            "medical_history_asked": false,
+            "procedure_explained": false,
+            "risk_factor_assessed": false
+          },
+          "knowledge_confidence": 1.0,
+          "knowledge_verdict": "Inappropriate",
+          "communication_verdict": "Partially Appropriate",
+          "communication_confidence": 0.9
+        },
+        {
+          "flags": {
+            "identity_asked": false,
+            "allergies_asked": false,
+            "pain_assessed": true,
+            "medical_history_asked": false,
+            "procedure_explained": false,
+            "risk_factor_assessed": false
+          },
+          "knowledge_confidence": 1.0,
+          "knowledge_verdict": "Inappropriate",
+          "communication_verdict": "Partially Appropriate",
+          "communication_confidence": 0.9
+        },
+        {
+          "flags": {
+            "identity_asked": false,
+            "allergies_asked": false,
+            "pain_assessed": true,
+            "medical_history_asked": false,
+            "procedure_explained": false,
+            "risk_factor_assessed": false
+          },
+          "knowledge_confidence": 1.0,
+          "knowledge_verdict": "Inappropriate",
+          "communication_verdict": "Partially Appropriate",
+          "communication_confidence": 0.9
+        },
+        {
+          "flags": {
+            "identity_asked": false,
+            "allergies_asked": false,
+            "pain_assessed": true,
+            "medical_history_asked": false,
+            "procedure_explained": false,
+            "risk_factor_assessed": false
+          },
+          "knowledge_confidence": 1.0,
+          "knowledge_verdict": "Inappropriate",
+          "communication_verdict": "Partially Appropriate",
+          "communication_confidence": 0.9
+        },
+        {
+          "flags": {
+            "identity_asked": false,
+            "allergies_asked": false,
+            "pain_assessed": true,
+            "medical_history_asked": false,
+            "procedure_explained": false,
+            "risk_factor_assessed": false
+          },
+          "knowledge_confidence": 1.0,
+          "knowledge_verdict": "Inappropriate",
+          "communication_verdict": "Partially Appropriate",
+          "communication_confidence": 0.86
+        }
+      ],
+      "majority_flags": {
+        "identity_asked": false,
+        "allergies_asked": false,
+        "pain_assessed": true,
+        "medical_history_asked": false,
+        "procedure_explained": false,
+        "risk_factor_assessed": false
+      },
+      "majority_communication_verdict": "Partially Appropriate",
+      "case_consistency_rate": 1.0
+    },
+    {
+      "id": "case_05",
+      "category": "communication_variation",
+      "expected_flags": {
+        "identity_asked": true,
+        "allergies_asked": true,
+        "pain_assessed": true,
+        "medical_history_asked": false,
+        "procedure_explained": false,
+        "risk_factor_assessed": false
+      },
+      "expected_communication_verdict": "Partially Appropriate",
+      "clinical_context": {
+        "risk_factors": []
+      },
+      "transcript": "student: Tell me your name.\nstudent: Any allergies?\nstudent: Pain level?\nstudent: We need to get this over with.",
+      "runs": [
+        {
+          "flags": {
+            "identity_asked": true,
+            "allergies_asked": true,
+            "pain_assessed": true,
+            "medical_history_asked": false,
+            "procedure_explained": false,
+            "risk_factor_assessed": false
+          },
+          "knowledge_confidence": 1.0,
+          "knowledge_verdict": "Partially Appropriate",
+          "communication_verdict": "Inappropriate",
+          "communication_confidence": 0.92
+        },
+        {
+          "flags": {
+            "identity_asked": true,
+            "allergies_asked": true,
+            "pain_assessed": true,
+            "medical_history_asked": false,
+            "procedure_explained": false,
+            "risk_factor_assessed": false
+          },
+          "knowledge_confidence": 1.0,
+          "knowledge_verdict": "Partially Appropriate",
+          "communication_verdict": "Inappropriate",
+          "communication_confidence": 0.91
+        },
+        {
+          "flags": {
+            "identity_asked": true,
+            "allergies_asked": true,
+            "pain_assessed": true,
+            "medical_history_asked": false,
+            "procedure_explained": false,
+            "risk_factor_assessed": false
+          },
+          "knowledge_confidence": 1.0,
+          "knowledge_verdict": "Partially Appropriate",
+          "communication_verdict": "Partially Appropriate",
+          "communication_confidence": 0.92
+        },
+        {
+          "flags": {
+            "identity_asked": true,
+            "allergies_asked": true,
+            "pain_assessed": true,
+            "medical_history_asked": false,
+            "procedure_explained": false,
+            "risk_factor_assessed": false
+          },
+          "knowledge_confidence": 1.0,
+          "knowledge_verdict": "Partially Appropriate",
+          "communication_verdict": "Inappropriate",
+          "communication_confidence": 0.95
+        },
+        {
+          "flags": {
+            "identity_asked": true,
+            "allergies_asked": true,
+            "pain_assessed": true,
+            "medical_history_asked": false,
+            "procedure_explained": false,
+            "risk_factor_assessed": false
+          },
+          "knowledge_confidence": 1.0,
+          "knowledge_verdict": "Partially Appropriate",
+          "communication_verdict": "Partially Appropriate",
+          "communication_confidence": 0.86
+        }
+      ],
+      "majority_flags": {
+        "identity_asked": true,
+        "allergies_asked": true,
+        "pain_assessed": true,
+        "medical_history_asked": false,
+        "procedure_explained": false,
+        "risk_factor_assessed": false
+      },
+      "majority_communication_verdict": "Inappropriate",
+      "case_consistency_rate": 0.6
+    },
+    {
+      "id": "case_06",
+      "category": "off_topic",
+      "expected_flags": {
+        "identity_asked": false,
+        "allergies_asked": false,
+        "pain_assessed": false,
+        "medical_history_asked": false,
+        "procedure_explained": false,
+        "risk_factor_assessed": false
+      },
+      "expected_communication_verdict": "Inappropriate",
+      "clinical_context": {
+        "risk_factors": []
+      },
+      "transcript": "student: The weather is very hot today.\nstudent: Did you watch the cricket match last night?",
+      "runs": [
+        {
+          "flags": {
+            "identity_asked": false,
+            "allergies_asked": false,
+            "pain_assessed": false,
+            "medical_history_asked": false,
+            "procedure_explained": false,
+            "risk_factor_assessed": false
+          },
+          "knowledge_confidence": 1.0,
+          "knowledge_verdict": "Inappropriate",
+          "communication_verdict": "Partially Appropriate",
+          "communication_confidence": 0.86
+        },
+        {
+          "flags": {
+            "identity_asked": false,
+            "allergies_asked": false,
+            "pain_assessed": false,
+            "medical_history_asked": false,
+            "procedure_explained": false,
+            "risk_factor_assessed": false
+          },
+          "knowledge_confidence": 1.0,
+          "knowledge_verdict": "Inappropriate",
+          "communication_verdict": "Partially Appropriate",
+          "communication_confidence": 0.85
+        },
+        {
+          "flags": {
+            "identity_asked": false,
+            "allergies_asked": false,
+            "pain_assessed": false,
+            "medical_history_asked": false,
+            "procedure_explained": false,
+            "risk_factor_assessed": false
+          },
+          "knowledge_confidence": 1.0,
+          "knowledge_verdict": "Inappropriate",
+          "communication_verdict": "Partially Appropriate",
+          "communication_confidence": 0.86
+        },
+        {
+          "flags": {
+            "identity_asked": false,
+            "allergies_asked": false,
+            "pain_assessed": false,
+            "medical_history_asked": false,
+            "procedure_explained": false,
+            "risk_factor_assessed": false
+          },
+          "knowledge_confidence": 1.0,
+          "knowledge_verdict": "Inappropriate",
+          "communication_verdict": "Inappropriate",
+          "communication_confidence": 0.93
+        },
+        {
+          "flags": {
+            "identity_asked": false,
+            "allergies_asked": false,
+            "pain_assessed": false,
+            "medical_history_asked": false,
+            "procedure_explained": false,
+            "risk_factor_assessed": false
+          },
+          "knowledge_confidence": 1.0,
+          "knowledge_verdict": "Inappropriate",
+          "communication_verdict": "Partially Appropriate",
+          "communication_confidence": 0.92
+        }
+      ],
+      "majority_flags": {
+        "identity_asked": false,
+        "allergies_asked": false,
+        "pain_assessed": false,
+        "medical_history_asked": false,
+        "procedure_explained": false,
+        "risk_factor_assessed": false
+      },
+      "majority_communication_verdict": "Partially Appropriate",
+      "case_consistency_rate": 0.8
+    },
+    {
+      "id": "case_07",
+      "category": "full_coverage",
+      "expected_flags": {
+        "identity_asked": true,
+        "allergies_asked": true,
+        "pain_assessed": true,
+        "medical_history_asked": true,
+        "procedure_explained": true,
+        "risk_factor_assessed": false
+      },
+      "expected_communication_verdict": "Appropriate",
+      "clinical_context": {
+        "risk_factors": []
+      },
+      "transcript": "student: Hello, I am your nurse and I would like to check your wound safely.\nstudent: Could you confirm your full name for me?\nstudent: Have you had any allergies to tapes, iodine, or medications?\nstudent: What pain score would you give the wound right now?\nstudent: Have you had any previous surgery or medical problems related to healing?\nstudent: I will explain the wound-care procedure before I continue.",
+      "runs": [
+        {
+          "flags": {
+            "identity_asked": true,
+            "allergies_asked": true,
+            "pain_assessed": true,
+            "medical_history_asked": true,
+            "procedure_explained": false,
+            "risk_factor_assessed": false
+          },
+          "knowledge_confidence": 1.0,
+          "knowledge_verdict": "Partially Appropriate",
+          "communication_verdict": "Partially Appropriate",
+          "communication_confidence": 0.9
+        },
+        {
+          "flags": {
+            "identity_asked": true,
+            "allergies_asked": true,
+            "pain_assessed": true,
+            "medical_history_asked": true,
+            "procedure_explained": false,
+            "risk_factor_assessed": false
+          },
+          "knowledge_confidence": 1.0,
+          "knowledge_verdict": "Partially Appropriate",
+          "communication_verdict": "Partially Appropriate",
+          "communication_confidence": 0.9
+        },
+        {
+          "flags": {
+            "identity_asked": true,
+            "allergies_asked": true,
+            "pain_assessed": true,
+            "medical_history_asked": true,
+            "procedure_explained": false,
+            "risk_factor_assessed": false
+          },
+          "knowledge_confidence": 1.0,
+          "knowledge_verdict": "Partially Appropriate",
+          "communication_verdict": "Partially Appropriate",
+          "communication_confidence": 0.88
+        },
+        {
+          "flags": {
+            "identity_asked": true,
+            "allergies_asked": true,
+            "pain_assessed": true,
+            "medical_history_asked": true,
+            "procedure_explained": false,
+            "risk_factor_assessed": false
+          },
+          "knowledge_confidence": 1.0,
+          "knowledge_verdict": "Partially Appropriate",
+          "communication_verdict": "Partially Appropriate",
+          "communication_confidence": 0.92
+        },
+        {
+          "flags": {
+            "identity_asked": true,
+            "allergies_asked": true,
+            "pain_assessed": true,
+            "medical_history_asked": true,
+            "procedure_explained": false,
+            "risk_factor_assessed": false
+          },
+          "knowledge_confidence": 1.0,
+          "knowledge_verdict": "Partially Appropriate",
+          "communication_verdict": "Partially Appropriate",
+          "communication_confidence": 0.88
+        }
+      ],
+      "majority_flags": {
+        "identity_asked": true,
+        "allergies_asked": true,
+        "pain_assessed": true,
+        "medical_history_asked": true,
+        "procedure_explained": false,
+        "risk_factor_assessed": false
+      },
+      "majority_communication_verdict": "Partially Appropriate",
+      "case_consistency_rate": 1.0
+    },
+    {
+      "id": "case_08",
+      "category": "partial_coverage_diabetes",
+      "expected_flags": {
+        "identity_asked": true,
+        "allergies_asked": true,
+        "pain_assessed": false,
+        "medical_history_asked": false,
+        "procedure_explained": false,
+        "risk_factor_assessed": true
+      },
+      "expected_communication_verdict": "Appropriate",
+      "clinical_context": {
+        "risk_factors": [
+          "diabetes"
+        ],
+        "healing_risk": "high",
+        "infection_risk": "high"
+      },
+      "transcript": "student: Hello, I am your student nurse.\nstudent: Can you confirm your identity for me?\nstudent: Are you allergic to anything?\nstudent: Do you have diabetes?",
+      "runs": [
+        {
+          "flags": {
+            "identity_asked": true,
+            "allergies_asked": true,
+            "pain_assessed": false,
+            "medical_history_asked": true,
+            "procedure_explained": false,
+            "risk_factor_assessed": true
+          },
+          "knowledge_confidence": 1.0,
+          "knowledge_verdict": "Partially Appropriate",
+          "communication_verdict": "Partially Appropriate",
+          "communication_confidence": 0.9
+        },
+        {
+          "flags": {
+            "identity_asked": true,
+            "allergies_asked": true,
+            "pain_assessed": false,
+            "medical_history_asked": true,
+            "procedure_explained": false,
+            "risk_factor_assessed": true
+          },
+          "knowledge_confidence": 1.0,
+          "knowledge_verdict": "Partially Appropriate",
+          "communication_verdict": "Partially Appropriate",
+          "communication_confidence": 0.9
+        },
+        {
+          "flags": {
+            "identity_asked": true,
+            "allergies_asked": true,
+            "pain_assessed": false,
+            "medical_history_asked": true,
+            "procedure_explained": false,
+            "risk_factor_assessed": true
+          },
+          "knowledge_confidence": 1.0,
+          "knowledge_verdict": "Partially Appropriate",
+          "communication_verdict": "Partially Appropriate",
+          "communication_confidence": 0.86
+        },
+        {
+          "flags": {
+            "identity_asked": true,
+            "allergies_asked": true,
+            "pain_assessed": false,
+            "medical_history_asked": true,
+            "procedure_explained": false,
+            "risk_factor_assessed": true
+          },
+          "knowledge_confidence": 1.0,
+          "knowledge_verdict": "Partially Appropriate",
+          "communication_verdict": "Partially Appropriate",
+          "communication_confidence": 0.88
+        },
+        {
+          "flags": {
+            "identity_asked": true,
+            "allergies_asked": true,
+            "pain_assessed": false,
+            "medical_history_asked": true,
+            "procedure_explained": false,
+            "risk_factor_assessed": true
+          },
+          "knowledge_confidence": 1.0,
+          "knowledge_verdict": "Partially Appropriate",
+          "communication_verdict": "Partially Appropriate",
+          "communication_confidence": 0.93
+        }
+      ],
+      "majority_flags": {
+        "identity_asked": true,
+        "allergies_asked": true,
+        "pain_assessed": false,
+        "medical_history_asked": true,
+        "procedure_explained": false,
+        "risk_factor_assessed": true
+      },
+      "majority_communication_verdict": "Partially Appropriate",
+      "case_consistency_rate": 1.0
+    },
+    {
+      "id": "case_09",
+      "category": "short_conversation",
+      "expected_flags": {
+        "identity_asked": false,
+        "allergies_asked": true,
+        "pain_assessed": false,
+        "medical_history_asked": false,
+        "procedure_explained": false,
+        "risk_factor_assessed": false
+      },
+      "expected_communication_verdict": "Partially Appropriate",
+      "clinical_context": {
+        "risk_factors": []
+      },
+      "transcript": "student: Hello.\nstudent: Do you have allergies?",
+      "runs": [
+        {
+          "flags": {
+            "identity_asked": false,
+            "allergies_asked": true,
+            "pain_assessed": false,
+            "medical_history_asked": false,
+            "procedure_explained": false,
+            "risk_factor_assessed": false
+          },
+          "knowledge_confidence": 1.0,
+          "knowledge_verdict": "Inappropriate",
+          "communication_verdict": "Partially Appropriate",
+          "communication_confidence": 0.92
+        },
+        {
+          "flags": {
+            "identity_asked": false,
+            "allergies_asked": true,
+            "pain_assessed": false,
+            "medical_history_asked": false,
+            "procedure_explained": false,
+            "risk_factor_assessed": false
+          },
+          "knowledge_confidence": 1.0,
+          "knowledge_verdict": "Inappropriate",
+          "communication_verdict": "Partially Appropriate",
+          "communication_confidence": 0.91
+        },
+        {
+          "flags": {
+            "identity_asked": false,
+            "allergies_asked": true,
+            "pain_assessed": false,
+            "medical_history_asked": false,
+            "procedure_explained": false,
+            "risk_factor_assessed": false
+          },
+          "knowledge_confidence": 1.0,
+          "knowledge_verdict": "Inappropriate",
+          "communication_verdict": "Partially Appropriate",
+          "communication_confidence": 0.9
+        },
+        {
+          "flags": {
+            "identity_asked": false,
+            "allergies_asked": true,
+            "pain_assessed": false,
+            "medical_history_asked": false,
+            "procedure_explained": false,
+            "risk_factor_assessed": false
+          },
+          "knowledge_confidence": 1.0,
+          "knowledge_verdict": "Inappropriate",
+          "communication_verdict": "Partially Appropriate",
+          "communication_confidence": 0.86
+        },
+        {
+          "flags": {
+            "identity_asked": false,
+            "allergies_asked": true,
+            "pain_assessed": false,
+            "medical_history_asked": false,
+            "procedure_explained": false,
+            "risk_factor_assessed": false
+          },
+          "knowledge_confidence": 1.0,
+          "knowledge_verdict": "Inappropriate",
+          "communication_verdict": "Partially Appropriate",
+          "communication_confidence": 0.92
+        }
+      ],
+      "majority_flags": {
+        "identity_asked": false,
+        "allergies_asked": true,
+        "pain_assessed": false,
+        "medical_history_asked": false,
+        "procedure_explained": false,
+        "risk_factor_assessed": false
+      },
+      "majority_communication_verdict": "Partially Appropriate",
+      "case_consistency_rate": 1.0
+    },
+    {
+      "id": "case_10",
+      "category": "communication_variation",
+      "expected_flags": {
+        "identity_asked": true,
+        "allergies_asked": true,
+        "pain_assessed": true,
+        "medical_history_asked": false,
+        "procedure_explained": false,
+        "risk_factor_assessed": false
+      },
+      "expected_communication_verdict": "Inappropriate",
+      "clinical_context": {
+        "risk_factors": []
+      },
+      "transcript": "student: Hey, what is your name?\nstudent: Any allergies?\nstudent: How bad is the pain?\nstudent: Answer quickly.",
+      "runs": [
+        {
+          "flags": {
+            "identity_asked": true,
+            "allergies_asked": true,
+            "pain_assessed": true,
+            "medical_history_asked": false,
+            "procedure_explained": false,
+            "risk_factor_assessed": false
+          },
+          "knowledge_confidence": 1.0,
+          "knowledge_verdict": "Partially Appropriate",
+          "communication_verdict": "Partially Appropriate",
+          "communication_confidence": 0.92
+        },
+        {
+          "flags": {
+            "identity_asked": true,
+            "allergies_asked": true,
+            "pain_assessed": true,
+            "medical_history_asked": false,
+            "procedure_explained": false,
+            "risk_factor_assessed": false
+          },
+          "knowledge_confidence": 1.0,
+          "knowledge_verdict": "Partially Appropriate",
+          "communication_verdict": "Partially Appropriate",
+          "communication_confidence": 0.9
+        },
+        {
+          "flags": {
+            "identity_asked": true,
+            "allergies_asked": true,
+            "pain_assessed": true,
+            "medical_history_asked": false,
+            "procedure_explained": false,
+            "risk_factor_assessed": false
+          },
+          "knowledge_confidence": 1.0,
+          "knowledge_verdict": "Partially Appropriate",
+          "communication_verdict": "Inappropriate",
+          "communication_confidence": 0.95
+        },
+        {
+          "flags": {
+            "identity_asked": true,
+            "allergies_asked": true,
+            "pain_assessed": true,
+            "medical_history_asked": false,
+            "procedure_explained": false,
+            "risk_factor_assessed": false
+          },
+          "knowledge_confidence": 1.0,
+          "knowledge_verdict": "Partially Appropriate",
+          "communication_verdict": "Partially Appropriate",
+          "communication_confidence": 0.92
+        },
+        {
+          "flags": {
+            "identity_asked": true,
+            "allergies_asked": true,
+            "pain_assessed": true,
+            "medical_history_asked": false,
+            "procedure_explained": false,
+            "risk_factor_assessed": false
+          },
+          "knowledge_confidence": 1.0,
+          "knowledge_verdict": "Partially Appropriate",
+          "communication_verdict": "Inappropriate",
+          "communication_confidence": 0.92
+        }
+      ],
+      "majority_flags": {
+        "identity_asked": true,
+        "allergies_asked": true,
+        "pain_assessed": true,
+        "medical_history_asked": false,
+        "procedure_explained": false,
+        "risk_factor_assessed": false
+      },
+      "majority_communication_verdict": "Partially Appropriate",
+      "case_consistency_rate": 0.6
+    },
+    {
+      "id": "case_11",
+      "category": "partial_coverage",
+      "expected_flags": {
+        "identity_asked": false,
+        "allergies_asked": false,
+        "pain_assessed": true,
+        "medical_history_asked": true,
+        "procedure_explained": false,
+        "risk_factor_assessed": false
+      },
+      "expected_communication_verdict": "Appropriate",
+      "clinical_context": {
+        "risk_factors": []
+      },
+      "transcript": "student: Good afternoon, I am your nurse today.\nstudent: Could you tell me about any medical conditions you have?\nstudent: Do you have pain around the wound?",
+      "runs": [
+        {
+          "flags": {
+            "identity_asked": false,
+            "allergies_asked": false,
+            "pain_assessed": true,
+            "medical_history_asked": true,
+            "procedure_explained": false,
+            "risk_factor_assessed": false
+          },
+          "knowledge_confidence": 1.0,
+          "knowledge_verdict": "Inappropriate",
+          "communication_verdict": "Partially Appropriate",
+          "communication_confidence": 0.86
+        },
+        {
+          "flags": {
+            "identity_asked": false,
+            "allergies_asked": false,
+            "pain_assessed": true,
+            "medical_history_asked": true,
+            "procedure_explained": false,
+            "risk_factor_assessed": false
+          },
+          "knowledge_confidence": 1.0,
+          "knowledge_verdict": "Inappropriate",
+          "communication_verdict": "Partially Appropriate",
+          "communication_confidence": 0.86
+        },
+        {
+          "flags": {
+            "identity_asked": false,
+            "allergies_asked": false,
+            "pain_assessed": true,
+            "medical_history_asked": true,
+            "procedure_explained": false,
+            "risk_factor_assessed": false
+          },
+          "knowledge_confidence": 1.0,
+          "knowledge_verdict": "Inappropriate",
+          "communication_verdict": "Partially Appropriate",
+          "communication_confidence": 0.9
+        },
+        {
+          "flags": {
+            "identity_asked": false,
+            "allergies_asked": false,
+            "pain_assessed": true,
+            "medical_history_asked": true,
+            "procedure_explained": false,
+            "risk_factor_assessed": false
+          },
+          "knowledge_confidence": 1.0,
+          "knowledge_verdict": "Inappropriate",
+          "communication_verdict": "Inappropriate",
+          "communication_confidence": 0.0
+        },
+        {
+          "flags": {
+            "identity_asked": false,
+            "allergies_asked": false,
+            "pain_assessed": true,
+            "medical_history_asked": true,
+            "procedure_explained": false,
+            "risk_factor_assessed": false
+          },
+          "knowledge_confidence": 1.0,
+          "knowledge_verdict": "Inappropriate",
+          "communication_verdict": "Partially Appropriate",
+          "communication_confidence": 0.92
+        }
+      ],
+      "majority_flags": {
+        "identity_asked": false,
+        "allergies_asked": false,
+        "pain_assessed": true,
+        "medical_history_asked": true,
+        "procedure_explained": false,
+        "risk_factor_assessed": false
+      },
+      "majority_communication_verdict": "Partially Appropriate",
+      "case_consistency_rate": 0.8
+    },
+    {
+      "id": "case_12",
+      "category": "minimal_coverage",
+      "expected_flags": {
+        "identity_asked": true,
+        "allergies_asked": false,
+        "pain_assessed": false,
+        "medical_history_asked": true,
+        "procedure_explained": false,
+        "risk_factor_assessed": false
+      },
+      "expected_communication_verdict": "Partially Appropriate",
+      "clinical_context": {
+        "risk_factors": []
+      },
+      "transcript": "student: Name?\nstudent: Any medical problems?",
+      "runs": [
+        {
+          "flags": {
+            "identity_asked": true,
+            "allergies_asked": false,
+            "pain_assessed": false,
+            "medical_history_asked": true,
+            "procedure_explained": false,
+            "risk_factor_assessed": false
+          },
+          "knowledge_confidence": 1.0,
+          "knowledge_verdict": "Inappropriate",
+          "communication_verdict": "Inappropriate",
+          "communication_confidence": 0.9
+        },
+        {
+          "flags": {
+            "identity_asked": true,
+            "allergies_asked": false,
+            "pain_assessed": false,
+            "medical_history_asked": true,
+            "procedure_explained": false,
+            "risk_factor_assessed": false
+          },
+          "knowledge_confidence": 1.0,
+          "knowledge_verdict": "Inappropriate",
+          "communication_verdict": "Inappropriate",
+          "communication_confidence": 0.9
+        },
+        {
+          "flags": {
+            "identity_asked": true,
+            "allergies_asked": false,
+            "pain_assessed": false,
+            "medical_history_asked": true,
+            "procedure_explained": false,
+            "risk_factor_assessed": false
+          },
+          "knowledge_confidence": 1.0,
+          "knowledge_verdict": "Inappropriate",
+          "communication_verdict": "Inappropriate",
+          "communication_confidence": 0.92
+        },
+        {
+          "flags": {
+            "identity_asked": true,
+            "allergies_asked": false,
+            "pain_assessed": false,
+            "medical_history_asked": true,
+            "procedure_explained": false,
+            "risk_factor_assessed": false
+          },
+          "knowledge_confidence": 1.0,
+          "knowledge_verdict": "Inappropriate",
+          "communication_verdict": "Inappropriate",
+          "communication_confidence": 0.92
+        },
+        {
+          "flags": {
+            "identity_asked": true,
+            "allergies_asked": false,
+            "pain_assessed": false,
+            "medical_history_asked": true,
+            "procedure_explained": false,
+            "risk_factor_assessed": false
+          },
+          "knowledge_confidence": 1.0,
+          "knowledge_verdict": "Inappropriate",
+          "communication_verdict": "Partially Appropriate",
+          "communication_confidence": 0.86
+        }
+      ],
+      "majority_flags": {
+        "identity_asked": true,
+        "allergies_asked": false,
+        "pain_assessed": false,
+        "medical_history_asked": true,
+        "procedure_explained": false,
+        "risk_factor_assessed": false
+      },
+      "majority_communication_verdict": "Inappropriate",
+      "case_consistency_rate": 0.8
+    },
+    {
+      "id": "case_13",
+      "category": "full_coverage_diabetes",
+      "expected_flags": {
+        "identity_asked": true,
+        "allergies_asked": true,
+        "pain_assessed": true,
+        "medical_history_asked": true,
+        "procedure_explained": true,
+        "risk_factor_assessed": true
+      },
+      "expected_communication_verdict": "Appropriate",
+      "clinical_context": {
+        "risk_factors": [
+          "diabetes"
+        ],
+        "healing_risk": "high",
+        "infection_risk": "high"
+      },
+      "transcript": "student: Hello Mrs. Silva, I am your nurse.\nstudent: Can you confirm your name and date of birth?\nstudent: Do you have any allergies?\nstudent: What pain score would you give the wound?\nstudent: Have your sugars been controlled recently, and do you have diabetes-related complications?\nstudent: Do you have any other medical history that affects healing?\nstudent: I am going to explain the wound-care procedure before I start.",
+      "runs": [
+        {
+          "flags": {
+            "identity_asked": true,
+            "allergies_asked": true,
+            "pain_assessed": true,
+            "medical_history_asked": true,
+            "procedure_explained": true,
+            "risk_factor_assessed": true
+          },
+          "knowledge_confidence": 1.0,
+          "knowledge_verdict": "Partially Appropriate",
+          "communication_verdict": "Partially Appropriate",
+          "communication_confidence": 0.9
+        },
+        {
+          "flags": {
+            "identity_asked": true,
+            "allergies_asked": true,
+            "pain_assessed": true,
+            "medical_history_asked": true,
+            "procedure_explained": true,
+            "risk_factor_assessed": true
+          },
+          "knowledge_confidence": 1.0,
+          "knowledge_verdict": "Partially Appropriate",
+          "communication_verdict": "Partially Appropriate",
+          "communication_confidence": 0.88
+        },
+        {
+          "flags": {
+            "identity_asked": true,
+            "allergies_asked": true,
+            "pain_assessed": true,
+            "medical_history_asked": true,
+            "procedure_explained": true,
+            "risk_factor_assessed": true
+          },
+          "knowledge_confidence": 1.0,
+          "knowledge_verdict": "Partially Appropriate",
+          "communication_verdict": "Partially Appropriate",
+          "communication_confidence": 0.86
+        },
+        {
+          "flags": {
+            "identity_asked": true,
+            "allergies_asked": true,
+            "pain_assessed": true,
+            "medical_history_asked": true,
+            "procedure_explained": true,
+            "risk_factor_assessed": true
+          },
+          "knowledge_confidence": 1.0,
+          "knowledge_verdict": "Partially Appropriate",
+          "communication_verdict": "Partially Appropriate",
+          "communication_confidence": 0.92
+        },
+        {
+          "flags": {
+            "identity_asked": true,
+            "allergies_asked": true,
+            "pain_assessed": true,
+            "medical_history_asked": true,
+            "procedure_explained": true,
+            "risk_factor_assessed": true
+          },
+          "knowledge_confidence": 1.0,
+          "knowledge_verdict": "Partially Appropriate",
+          "communication_verdict": "Partially Appropriate",
+          "communication_confidence": 0.86
+        }
+      ],
+      "majority_flags": {
+        "identity_asked": true,
+        "allergies_asked": true,
+        "pain_assessed": true,
+        "medical_history_asked": true,
+        "procedure_explained": true,
+        "risk_factor_assessed": true
+      },
+      "majority_communication_verdict": "Partially Appropriate",
+      "case_consistency_rate": 1.0
+    },
+    {
+      "id": "case_14",
+      "category": "edge_case_no_student_question",
+      "expected_flags": {
+        "identity_asked": false,
+        "allergies_asked": false,
+        "pain_assessed": false,
+        "medical_history_asked": false,
+        "procedure_explained": false,
+        "risk_factor_assessed": false
+      },
+      "expected_communication_verdict": "Inappropriate",
+      "clinical_context": {
+        "risk_factors": []
+      },
+      "transcript": "",
+      "runs": [
+        {
+          "flags": {
+            "identity_asked": false,
+            "allergies_asked": false,
+            "pain_assessed": false,
+            "medical_history_asked": false,
+            "procedure_explained": false,
+            "risk_factor_assessed": false
+          },
+          "knowledge_confidence": 0.0,
+          "knowledge_verdict": "Inappropriate",
+          "communication_verdict": "Inappropriate",
+          "communication_confidence": 1.0
+        },
+        {
+          "flags": {
+            "identity_asked": false,
+            "allergies_asked": false,
+            "pain_assessed": false,
+            "medical_history_asked": false,
+            "procedure_explained": false,
+            "risk_factor_assessed": false
+          },
+          "knowledge_confidence": 0.0,
+          "knowledge_verdict": "Inappropriate",
+          "communication_verdict": "Inappropriate",
+          "communication_confidence": 1.0
+        },
+        {
+          "flags": {
+            "identity_asked": false,
+            "allergies_asked": false,
+            "pain_assessed": false,
+            "medical_history_asked": false,
+            "procedure_explained": false,
+            "risk_factor_assessed": false
+          },
+          "knowledge_confidence": 0.0,
+          "knowledge_verdict": "Inappropriate",
+          "communication_verdict": "Inappropriate",
+          "communication_confidence": 1.0
+        },
+        {
+          "flags": {
+            "identity_asked": false,
+            "allergies_asked": false,
+            "pain_assessed": false,
+            "medical_history_asked": false,
+            "procedure_explained": false,
+            "risk_factor_assessed": false
+          },
+          "knowledge_confidence": 0.0,
+          "knowledge_verdict": "Inappropriate",
+          "communication_verdict": "Inappropriate",
+          "communication_confidence": 1.0
+        },
+        {
+          "flags": {
+            "identity_asked": false,
+            "allergies_asked": false,
+            "pain_assessed": false,
+            "medical_history_asked": false,
+            "procedure_explained": false,
+            "risk_factor_assessed": false
+          },
+          "knowledge_confidence": 0.0,
+          "knowledge_verdict": "Inappropriate",
+          "communication_verdict": "Inappropriate",
+          "communication_confidence": 1.0
+        }
+      ],
+      "majority_flags": {
+        "identity_asked": false,
+        "allergies_asked": false,
+        "pain_assessed": false,
+        "medical_history_asked": false,
+        "procedure_explained": false,
+        "risk_factor_assessed": false
+      },
+      "majority_communication_verdict": "Inappropriate",
+      "case_consistency_rate": 1.0
+    },
+    {
+      "id": "case_15",
+      "category": "partial_coverage",
+      "expected_flags": {
+        "identity_asked": true,
+        "allergies_asked": false,
+        "pain_assessed": false,
+        "medical_history_asked": false,
+        "procedure_explained": true,
+        "risk_factor_assessed": false
+      },
+      "expected_communication_verdict": "Appropriate",
+      "clinical_context": {
+        "risk_factors": []
+      },
+      "transcript": "student: Hello, I am here to prepare you for wound care.\nstudent: Can you confirm your identity?\nstudent: I will explain what I am doing as we go.",
+      "runs": [
+        {
+          "flags": {
+            "identity_asked": true,
+            "allergies_asked": false,
+            "pain_assessed": false,
+            "medical_history_asked": false,
+            "procedure_explained": true,
+            "risk_factor_assessed": false
+          },
+          "knowledge_confidence": 1.0,
+          "knowledge_verdict": "Inappropriate",
+          "communication_verdict": "Partially Appropriate",
+          "communication_confidence": 0.9
+        },
+        {
+          "flags": {
+            "identity_asked": true,
+            "allergies_asked": false,
+            "pain_assessed": false,
+            "medical_history_asked": false,
+            "procedure_explained": true,
+            "risk_factor_assessed": false
+          },
+          "knowledge_confidence": 1.0,
+          "knowledge_verdict": "Inappropriate",
+          "communication_verdict": "Partially Appropriate",
+          "communication_confidence": 0.92
+        },
+        {
+          "flags": {
+            "identity_asked": true,
+            "allergies_asked": false,
+            "pain_assessed": false,
+            "medical_history_asked": false,
+            "procedure_explained": true,
+            "risk_factor_assessed": false
+          },
+          "knowledge_confidence": 1.0,
+          "knowledge_verdict": "Inappropriate",
+          "communication_verdict": "Partially Appropriate",
+          "communication_confidence": 0.9
+        },
+        {
+          "flags": {
+            "identity_asked": true,
+            "allergies_asked": false,
+            "pain_assessed": false,
+            "medical_history_asked": false,
+            "procedure_explained": false,
+            "risk_factor_assessed": false
+          },
+          "knowledge_confidence": 1.0,
+          "knowledge_verdict": "Inappropriate",
+          "communication_verdict": "Partially Appropriate",
+          "communication_confidence": 0.9
+        },
+        {
+          "flags": {
+            "identity_asked": true,
+            "allergies_asked": false,
+            "pain_assessed": false,
+            "medical_history_asked": false,
+            "procedure_explained": false,
+            "risk_factor_assessed": false
+          },
+          "knowledge_confidence": 1.0,
+          "knowledge_verdict": "Inappropriate",
+          "communication_verdict": "Partially Appropriate",
+          "communication_confidence": 0.9
+        }
+      ],
+      "majority_flags": {
+        "identity_asked": true,
+        "allergies_asked": false,
+        "pain_assessed": false,
+        "medical_history_asked": false,
+        "procedure_explained": true,
+        "risk_factor_assessed": false
+      },
+      "majority_communication_verdict": "Partially Appropriate",
+      "case_consistency_rate": 0.6
+    },
+    {
+      "id": "case_16",
+      "category": "communication_variation",
+      "expected_flags": {
+        "identity_asked": true,
+        "allergies_asked": true,
+        "pain_assessed": true,
+        "medical_history_asked": false,
+        "procedure_explained": false,
+        "risk_factor_assessed": false
+      },
+      "expected_communication_verdict": "Inappropriate",
+      "clinical_context": {
+        "risk_factors": []
+      },
+      "transcript": "student: Listen carefully, I need your name.\nstudent: Do you have any allergies or not?\nstudent: What is your pain number?\nstudent: I do not have time for long answers.",
+      "runs": [
+        {
+          "flags": {
+            "identity_asked": true,
+            "allergies_asked": true,
+            "pain_assessed": true,
+            "medical_history_asked": false,
+            "procedure_explained": false,
+            "risk_factor_assessed": false
+          },
+          "knowledge_confidence": 1.0,
+          "knowledge_verdict": "Partially Appropriate",
+          "communication_verdict": "Inappropriate",
+          "communication_confidence": 0.95
+        },
+        {
+          "flags": {
+            "identity_asked": true,
+            "allergies_asked": true,
+            "pain_assessed": true,
+            "medical_history_asked": false,
+            "procedure_explained": false,
+            "risk_factor_assessed": false
+          },
+          "knowledge_confidence": 1.0,
+          "knowledge_verdict": "Partially Appropriate",
+          "communication_verdict": "Inappropriate",
+          "communication_confidence": 0.95
+        },
+        {
+          "flags": {
+            "identity_asked": true,
+            "allergies_asked": true,
+            "pain_assessed": true,
+            "medical_history_asked": false,
+            "procedure_explained": false,
+            "risk_factor_assessed": false
+          },
+          "knowledge_confidence": 1.0,
+          "knowledge_verdict": "Partially Appropriate",
+          "communication_verdict": "Inappropriate",
+          "communication_confidence": 0.95
+        },
+        {
+          "flags": {
+            "identity_asked": true,
+            "allergies_asked": true,
+            "pain_assessed": true,
+            "medical_history_asked": false,
+            "procedure_explained": false,
+            "risk_factor_assessed": false
+          },
+          "knowledge_confidence": 1.0,
+          "knowledge_verdict": "Partially Appropriate",
+          "communication_verdict": "Inappropriate",
+          "communication_confidence": 0.92
+        },
+        {
+          "flags": {
+            "identity_asked": true,
+            "allergies_asked": true,
+            "pain_assessed": true,
+            "medical_history_asked": false,
+            "procedure_explained": false,
+            "risk_factor_assessed": false
+          },
+          "knowledge_confidence": 1.0,
+          "knowledge_verdict": "Partially Appropriate",
+          "communication_verdict": "Inappropriate",
+          "communication_confidence": 0.94
+        }
+      ],
+      "majority_flags": {
+        "identity_asked": true,
+        "allergies_asked": true,
+        "pain_assessed": true,
+        "medical_history_asked": false,
+        "procedure_explained": false,
+        "risk_factor_assessed": false
+      },
+      "majority_communication_verdict": "Inappropriate",
+      "case_consistency_rate": 1.0
+    },
+    {
+      "id": "case_17",
+      "category": "partial_coverage_diabetes",
+      "expected_flags": {
+        "identity_asked": false,
+        "allergies_asked": false,
+        "pain_assessed": true,
+        "medical_history_asked": false,
+        "procedure_explained": false,
+        "risk_factor_assessed": true
+      },
+      "expected_communication_verdict": "Appropriate",
+      "clinical_context": {
+        "risk_factors": [
+          "diabetes"
+        ],
+        "healing_risk": "high",
+        "infection_risk": "high"
+      },
+      "transcript": "student: Good morning.\nstudent: Are you in much pain today?\nstudent: Do you have diabetes or trouble with wound healing?",
+      "runs": [
+        {
+          "flags": {
+            "identity_asked": false,
+            "allergies_asked": false,
+            "pain_assessed": true,
+            "medical_history_asked": true,
+            "procedure_explained": false,
+            "risk_factor_assessed": true
+          },
+          "knowledge_confidence": 1.0,
+          "knowledge_verdict": "Partially Appropriate",
+          "communication_verdict": "Partially Appropriate",
+          "communication_confidence": 0.88
+        },
+        {
+          "flags": {
+            "identity_asked": false,
+            "allergies_asked": false,
+            "pain_assessed": true,
+            "medical_history_asked": true,
+            "procedure_explained": false,
+            "risk_factor_assessed": true
+          },
+          "knowledge_confidence": 1.0,
+          "knowledge_verdict": "Partially Appropriate",
+          "communication_verdict": "Partially Appropriate",
+          "communication_confidence": 0.91
+        },
+        {
+          "flags": {
+            "identity_asked": false,
+            "allergies_asked": false,
+            "pain_assessed": true,
+            "medical_history_asked": true,
+            "procedure_explained": false,
+            "risk_factor_assessed": true
+          },
+          "knowledge_confidence": 1.0,
+          "knowledge_verdict": "Partially Appropriate",
+          "communication_verdict": "Partially Appropriate",
+          "communication_confidence": 0.9
+        },
+        {
+          "flags": {
+            "identity_asked": false,
+            "allergies_asked": false,
+            "pain_assessed": true,
+            "medical_history_asked": true,
+            "procedure_explained": false,
+            "risk_factor_assessed": true
+          },
+          "knowledge_confidence": 1.0,
+          "knowledge_verdict": "Partially Appropriate",
+          "communication_verdict": "Partially Appropriate",
+          "communication_confidence": 0.92
+        },
+        {
+          "flags": {
+            "identity_asked": false,
+            "allergies_asked": false,
+            "pain_assessed": true,
+            "medical_history_asked": true,
+            "procedure_explained": false,
+            "risk_factor_assessed": true
+          },
+          "knowledge_confidence": 1.0,
+          "knowledge_verdict": "Partially Appropriate",
+          "communication_verdict": "Partially Appropriate",
+          "communication_confidence": 0.9
+        }
+      ],
+      "majority_flags": {
+        "identity_asked": false,
+        "allergies_asked": false,
+        "pain_assessed": true,
+        "medical_history_asked": true,
+        "procedure_explained": false,
+        "risk_factor_assessed": true
+      },
+      "majority_communication_verdict": "Partially Appropriate",
+      "case_consistency_rate": 1.0
+    },
+    {
+      "id": "case_18",
+      "category": "minimal_coverage",
+      "expected_flags": {
+        "identity_asked": false,
+        "allergies_asked": false,
+        "pain_assessed": true,
+        "medical_history_asked": false,
+        "procedure_explained": false,
+        "risk_factor_assessed": false
+      },
+      "expected_communication_verdict": "Partially Appropriate",
+      "clinical_context": {
+        "risk_factors": []
+      },
+      "transcript": "student: I am your nurse.\nstudent: Pain?",
+      "runs": [
+        {
+          "flags": {
+            "identity_asked": false,
+            "allergies_asked": false,
+            "pain_assessed": true,
+            "medical_history_asked": false,
+            "procedure_explained": false,
+            "risk_factor_assessed": false
+          },
+          "knowledge_confidence": 1.0,
+          "knowledge_verdict": "Inappropriate",
+          "communication_verdict": "Partially Appropriate",
+          "communication_confidence": 0.9
+        },
+        {
+          "flags": {
+            "identity_asked": false,
+            "allergies_asked": false,
+            "pain_assessed": true,
+            "medical_history_asked": false,
+            "procedure_explained": false,
+            "risk_factor_assessed": false
+          },
+          "knowledge_confidence": 1.0,
+          "knowledge_verdict": "Inappropriate",
+          "communication_verdict": "Partially Appropriate",
+          "communication_confidence": 0.9
+        },
+        {
+          "flags": {
+            "identity_asked": false,
+            "allergies_asked": false,
+            "pain_assessed": true,
+            "medical_history_asked": false,
+            "procedure_explained": false,
+            "risk_factor_assessed": false
+          },
+          "knowledge_confidence": 1.0,
+          "knowledge_verdict": "Inappropriate",
+          "communication_verdict": "Partially Appropriate",
+          "communication_confidence": 0.9
+        },
+        {
+          "flags": {
+            "identity_asked": false,
+            "allergies_asked": false,
+            "pain_assessed": true,
+            "medical_history_asked": false,
+            "procedure_explained": false,
+            "risk_factor_assessed": false
+          },
+          "knowledge_confidence": 1.0,
+          "knowledge_verdict": "Inappropriate",
+          "communication_verdict": "Partially Appropriate",
+          "communication_confidence": 0.95
+        },
+        {
+          "flags": {
+            "identity_asked": false,
+            "allergies_asked": false,
+            "pain_assessed": true,
+            "medical_history_asked": false,
+            "procedure_explained": false,
+            "risk_factor_assessed": false
+          },
+          "knowledge_confidence": 1.0,
+          "knowledge_verdict": "Inappropriate",
+          "communication_verdict": "Partially Appropriate",
+          "communication_confidence": 0.9
+        }
+      ],
+      "majority_flags": {
+        "identity_asked": false,
+        "allergies_asked": false,
+        "pain_assessed": true,
+        "medical_history_asked": false,
+        "procedure_explained": false,
+        "risk_factor_assessed": false
+      },
+      "majority_communication_verdict": "Partially Appropriate",
+      "case_consistency_rate": 1.0
+    },
+    {
+      "id": "case_19",
+      "category": "full_coverage",
+      "expected_flags": {
+        "identity_asked": true,
+        "allergies_asked": true,
+        "pain_assessed": true,
+        "medical_history_asked": true,
+        "procedure_explained": true,
+        "risk_factor_assessed": false
+      },
+      "expected_communication_verdict": "Appropriate",
+      "clinical_context": {
+        "risk_factors": []
+      },
+      "transcript": "student: Hello, I am the nursing student looking after you today.\nstudent: Please confirm your full name and date of birth.\nstudent: Have you had any allergies to medication, latex, or dressings?\nstudent: How severe is your pain at the moment?\nstudent: Do you have any medical problems such as hypertension or previous wound infections?\nstudent: I will explain the wound assessment procedure before I begin.",
+      "runs": [
+        {
+          "flags": {
+            "identity_asked": true,
+            "allergies_asked": true,
+            "pain_assessed": true,
+            "medical_history_asked": true,
+            "procedure_explained": false,
+            "risk_factor_assessed": false
+          },
+          "knowledge_confidence": 1.0,
+          "knowledge_verdict": "Partially Appropriate",
+          "communication_verdict": "Partially Appropriate",
+          "communication_confidence": 0.9
+        },
+        {
+          "flags": {
+            "identity_asked": true,
+            "allergies_asked": true,
+            "pain_assessed": true,
+            "medical_history_asked": true,
+            "procedure_explained": true,
+            "risk_factor_assessed": false
+          },
+          "knowledge_confidence": 1.0,
+          "knowledge_verdict": "Appropriate",
+          "communication_verdict": "Partially Appropriate",
+          "communication_confidence": 0.87
+        },
+        {
+          "flags": {
+            "identity_asked": true,
+            "allergies_asked": true,
+            "pain_assessed": true,
+            "medical_history_asked": true,
+            "procedure_explained": true,
+            "risk_factor_assessed": false
+          },
+          "knowledge_confidence": 1.0,
+          "knowledge_verdict": "Appropriate",
+          "communication_verdict": "Partially Appropriate",
+          "communication_confidence": 0.9
+        },
+        {
+          "flags": {
+            "identity_asked": true,
+            "allergies_asked": true,
+            "pain_assessed": true,
+            "medical_history_asked": true,
+            "procedure_explained": false,
+            "risk_factor_assessed": false
+          },
+          "knowledge_confidence": 1.0,
+          "knowledge_verdict": "Partially Appropriate",
+          "communication_verdict": "Partially Appropriate",
+          "communication_confidence": 0.9
+        },
+        {
+          "flags": {
+            "identity_asked": true,
+            "allergies_asked": true,
+            "pain_assessed": true,
+            "medical_history_asked": true,
+            "procedure_explained": false,
+            "risk_factor_assessed": false
+          },
+          "knowledge_confidence": 1.0,
+          "knowledge_verdict": "Partially Appropriate",
+          "communication_verdict": "Partially Appropriate",
+          "communication_confidence": 0.9
+        }
+      ],
+      "majority_flags": {
+        "identity_asked": true,
+        "allergies_asked": true,
+        "pain_assessed": true,
+        "medical_history_asked": true,
+        "procedure_explained": false,
+        "risk_factor_assessed": false
+      },
+      "majority_communication_verdict": "Partially Appropriate",
+      "case_consistency_rate": 0.6
+    },
+    {
+      "id": "case_20",
+      "category": "off_topic",
+      "expected_flags": {
+        "identity_asked": false,
+        "allergies_asked": false,
+        "pain_assessed": false,
+        "medical_history_asked": false,
+        "procedure_explained": false,
+        "risk_factor_assessed": false
+      },
+      "expected_communication_verdict": "Inappropriate",
+      "clinical_context": {
+        "risk_factors": []
+      },
+      "transcript": "student: I need to finish this quickly.\nstudent: Where do you live?\nstudent: What is your favorite food?",
+      "runs": [
+        {
+          "flags": {
+            "identity_asked": false,
+            "allergies_asked": false,
+            "pain_assessed": false,
+            "medical_history_asked": false,
+            "procedure_explained": false,
+            "risk_factor_assessed": false
+          },
+          "knowledge_confidence": 1.0,
+          "knowledge_verdict": "Inappropriate",
+          "communication_verdict": "Inappropriate",
+          "communication_confidence": 0.9
+        },
+        {
+          "flags": {
+            "identity_asked": false,
+            "allergies_asked": false,
+            "pain_assessed": false,
+            "medical_history_asked": false,
+            "procedure_explained": false,
+            "risk_factor_assessed": false
+          },
+          "knowledge_confidence": 1.0,
+          "knowledge_verdict": "Inappropriate",
+          "communication_verdict": "Inappropriate",
+          "communication_confidence": 0.92
+        },
+        {
+          "flags": {
+            "identity_asked": false,
+            "allergies_asked": false,
+            "pain_assessed": false,
+            "medical_history_asked": false,
+            "procedure_explained": false,
+            "risk_factor_assessed": false
+          },
+          "knowledge_confidence": 1.0,
+          "knowledge_verdict": "Inappropriate",
+          "communication_verdict": "Inappropriate",
+          "communication_confidence": 0.92
+        },
+        {
+          "flags": {
+            "identity_asked": false,
+            "allergies_asked": false,
+            "pain_assessed": false,
+            "medical_history_asked": false,
+            "procedure_explained": false,
+            "risk_factor_assessed": false
+          },
+          "knowledge_confidence": 1.0,
+          "knowledge_verdict": "Inappropriate",
+          "communication_verdict": "Inappropriate",
+          "communication_confidence": 0.92
+        },
+        {
+          "flags": {
+            "identity_asked": true,
+            "allergies_asked": false,
+            "pain_assessed": false,
+            "medical_history_asked": false,
+            "procedure_explained": false,
+            "risk_factor_assessed": false
+          },
+          "knowledge_confidence": 1.0,
+          "knowledge_verdict": "Inappropriate",
+          "communication_verdict": "Inappropriate",
+          "communication_confidence": 0.9
+        }
+      ],
+      "majority_flags": {
+        "identity_asked": false,
+        "allergies_asked": false,
+        "pain_assessed": false,
+        "medical_history_asked": false,
+        "procedure_explained": false,
+        "risk_factor_assessed": false
+      },
+      "majority_communication_verdict": "Inappropriate",
+      "case_consistency_rate": 0.8
+    },
+    {
+      "id": "case_21",
+      "category": "partial_coverage_diabetes",
+      "expected_flags": {
+        "identity_asked": true,
+        "allergies_asked": false,
+        "pain_assessed": false,
+        "medical_history_asked": false,
+        "procedure_explained": true,
+        "risk_factor_assessed": true
+      },
+      "expected_communication_verdict": "Appropriate",
+      "clinical_context": {
+        "risk_factors": [
+          "diabetes"
+        ],
+        "healing_risk": "high",
+        "infection_risk": "high"
+      },
+      "transcript": "student: Hello, I am your student nurse.\nstudent: Could you confirm your name for me?\nstudent: Have you got diabetes, and has your blood sugar been stable?\nstudent: I will explain the next steps before I inspect the wound.",
+      "runs": [
+        {
+          "flags": {
+            "identity_asked": true,
+            "allergies_asked": false,
+            "pain_assessed": false,
+            "medical_history_asked": true,
+            "procedure_explained": true,
+            "risk_factor_assessed": true
+          },
+          "knowledge_confidence": 1.0,
+          "knowledge_verdict": "Partially Appropriate",
+          "communication_verdict": "Partially Appropriate",
+          "communication_confidence": 0.9
+        },
+        {
+          "flags": {
+            "identity_asked": true,
+            "allergies_asked": false,
+            "pain_assessed": false,
+            "medical_history_asked": true,
+            "procedure_explained": false,
+            "risk_factor_assessed": true
+          },
+          "knowledge_confidence": 1.0,
+          "knowledge_verdict": "Partially Appropriate",
+          "communication_verdict": "Partially Appropriate",
+          "communication_confidence": 0.9
+        },
+        {
+          "flags": {
+            "identity_asked": true,
+            "allergies_asked": false,
+            "pain_assessed": false,
+            "medical_history_asked": true,
+            "procedure_explained": false,
+            "risk_factor_assessed": true
+          },
+          "knowledge_confidence": 1.0,
+          "knowledge_verdict": "Partially Appropriate",
+          "communication_verdict": "Partially Appropriate",
+          "communication_confidence": 0.88
+        },
+        {
+          "flags": {
+            "identity_asked": true,
+            "allergies_asked": false,
+            "pain_assessed": false,
+            "medical_history_asked": true,
+            "procedure_explained": false,
+            "risk_factor_assessed": true
+          },
+          "knowledge_confidence": 1.0,
+          "knowledge_verdict": "Partially Appropriate",
+          "communication_verdict": "Partially Appropriate",
+          "communication_confidence": 0.87
+        },
+        {
+          "flags": {
+            "identity_asked": true,
+            "allergies_asked": false,
+            "pain_assessed": false,
+            "medical_history_asked": true,
+            "procedure_explained": false,
+            "risk_factor_assessed": true
+          },
+          "knowledge_confidence": 1.0,
+          "knowledge_verdict": "Partially Appropriate",
+          "communication_verdict": "Partially Appropriate",
+          "communication_confidence": 0.86
+        }
+      ],
+      "majority_flags": {
+        "identity_asked": true,
+        "allergies_asked": false,
+        "pain_assessed": false,
+        "medical_history_asked": true,
+        "procedure_explained": false,
+        "risk_factor_assessed": true
+      },
+      "majority_communication_verdict": "Partially Appropriate",
+      "case_consistency_rate": 0.8
+    },
+    {
+      "id": "case_22",
+      "category": "partial_coverage",
+      "expected_flags": {
+        "identity_asked": false,
+        "allergies_asked": true,
+        "pain_assessed": false,
+        "medical_history_asked": true,
+        "procedure_explained": false,
+        "risk_factor_assessed": false
+      },
+      "expected_communication_verdict": "Appropriate",
+      "clinical_context": {
+        "risk_factors": []
+      },
+      "transcript": "student: Hi, I am your nurse.\nstudent: Do you have any allergies?\nstudent: Have you had surgery before?",
+      "runs": [
+        {
+          "flags": {
+            "identity_asked": false,
+            "allergies_asked": true,
+            "pain_assessed": false,
+            "medical_history_asked": true,
+            "procedure_explained": false,
+            "risk_factor_assessed": false
+          },
+          "knowledge_confidence": 1.0,
+          "knowledge_verdict": "Inappropriate",
+          "communication_verdict": "Partially Appropriate",
+          "communication_confidence": 0.86
+        },
+        {
+          "flags": {
+            "identity_asked": false,
+            "allergies_asked": true,
+            "pain_assessed": false,
+            "medical_history_asked": true,
+            "procedure_explained": false,
+            "risk_factor_assessed": false
+          },
+          "knowledge_confidence": 1.0,
+          "knowledge_verdict": "Inappropriate",
+          "communication_verdict": "Partially Appropriate",
+          "communication_confidence": 0.86
+        },
+        {
+          "flags": {
+            "identity_asked": false,
+            "allergies_asked": true,
+            "pain_assessed": false,
+            "medical_history_asked": true,
+            "procedure_explained": false,
+            "risk_factor_assessed": false
+          },
+          "knowledge_confidence": 1.0,
+          "knowledge_verdict": "Inappropriate",
+          "communication_verdict": "Partially Appropriate",
+          "communication_confidence": 0.92
+        },
+        {
+          "flags": {
+            "identity_asked": false,
+            "allergies_asked": true,
+            "pain_assessed": false,
+            "medical_history_asked": true,
+            "procedure_explained": false,
+            "risk_factor_assessed": false
+          },
+          "knowledge_confidence": 1.0,
+          "knowledge_verdict": "Inappropriate",
+          "communication_verdict": "Partially Appropriate",
+          "communication_confidence": 0.9
+        },
+        {
+          "flags": {
+            "identity_asked": false,
+            "allergies_asked": true,
+            "pain_assessed": false,
+            "medical_history_asked": true,
+            "procedure_explained": false,
+            "risk_factor_assessed": false
+          },
+          "knowledge_confidence": 1.0,
+          "knowledge_verdict": "Inappropriate",
+          "communication_verdict": "Inappropriate",
+          "communication_confidence": 0.0
+        }
+      ],
+      "majority_flags": {
+        "identity_asked": false,
+        "allergies_asked": true,
+        "pain_assessed": false,
+        "medical_history_asked": true,
+        "procedure_explained": false,
+        "risk_factor_assessed": false
+      },
+      "majority_communication_verdict": "Partially Appropriate",
+      "case_consistency_rate": 0.8
+    },
+    {
+      "id": "case_23",
+      "category": "communication_variation",
+      "expected_flags": {
+        "identity_asked": true,
+        "allergies_asked": true,
+        "pain_assessed": true,
+        "medical_history_asked": false,
+        "procedure_explained": true,
+        "risk_factor_assessed": false
+      },
+      "expected_communication_verdict": "Partially Appropriate",
+      "clinical_context": {
+        "risk_factors": []
+      },
+      "transcript": "student: State your name.\nstudent: Do you have allergies?\nstudent: Tell me your pain score.\nstudent: I will explain the wound check now.",
+      "runs": [
+        {
+          "flags": {
+            "identity_asked": true,
+            "allergies_asked": true,
+            "pain_assessed": true,
+            "medical_history_asked": false,
+            "procedure_explained": false,
+            "risk_factor_assessed": false
+          },
+          "knowledge_confidence": 1.0,
+          "knowledge_verdict": "Partially Appropriate",
+          "communication_verdict": "Partially Appropriate",
+          "communication_confidence": 0.86
+        },
+        {
+          "flags": {
+            "identity_asked": true,
+            "allergies_asked": true,
+            "pain_assessed": true,
+            "medical_history_asked": false,
+            "procedure_explained": false,
+            "risk_factor_assessed": false
+          },
+          "knowledge_confidence": 1.0,
+          "knowledge_verdict": "Partially Appropriate",
+          "communication_verdict": "Partially Appropriate",
+          "communication_confidence": 0.9
+        },
+        {
+          "flags": {
+            "identity_asked": true,
+            "allergies_asked": true,
+            "pain_assessed": true,
+            "medical_history_asked": false,
+            "procedure_explained": false,
+            "risk_factor_assessed": false
+          },
+          "knowledge_confidence": 1.0,
+          "knowledge_verdict": "Partially Appropriate",
+          "communication_verdict": "Partially Appropriate",
+          "communication_confidence": 0.9
+        },
+        {
+          "flags": {
+            "identity_asked": true,
+            "allergies_asked": true,
+            "pain_assessed": true,
+            "medical_history_asked": false,
+            "procedure_explained": false,
+            "risk_factor_assessed": false
+          },
+          "knowledge_confidence": 1.0,
+          "knowledge_verdict": "Partially Appropriate",
+          "communication_verdict": "Partially Appropriate",
+          "communication_confidence": 0.85
+        },
+        {
+          "flags": {
+            "identity_asked": true,
+            "allergies_asked": true,
+            "pain_assessed": true,
+            "medical_history_asked": false,
+            "procedure_explained": false,
+            "risk_factor_assessed": false
+          },
+          "knowledge_confidence": 1.0,
+          "knowledge_verdict": "Partially Appropriate",
+          "communication_verdict": "Partially Appropriate",
+          "communication_confidence": 0.92
+        }
+      ],
+      "majority_flags": {
+        "identity_asked": true,
+        "allergies_asked": true,
+        "pain_assessed": true,
+        "medical_history_asked": false,
+        "procedure_explained": false,
+        "risk_factor_assessed": false
+      },
+      "majority_communication_verdict": "Partially Appropriate",
+      "case_consistency_rate": 1.0
+    },
+    {
+      "id": "case_24",
+      "category": "minimal_coverage",
+      "expected_flags": {
+        "identity_asked": false,
+        "allergies_asked": true,
+        "pain_assessed": true,
+        "medical_history_asked": false,
+        "procedure_explained": false,
+        "risk_factor_assessed": false
+      },
+      "expected_communication_verdict": "Partially Appropriate",
+      "clinical_context": {
+        "risk_factors": []
+      },
+      "transcript": "student: Any allergies or pain?",
+      "runs": [
+        {
+          "flags": {
+            "identity_asked": false,
+            "allergies_asked": true,
+            "pain_assessed": true,
+            "medical_history_asked": false,
+            "procedure_explained": false,
+            "risk_factor_assessed": false
+          },
+          "knowledge_confidence": 1.0,
+          "knowledge_verdict": "Inappropriate",
+          "communication_verdict": "Partially Appropriate",
+          "communication_confidence": 0.9
+        },
+        {
+          "flags": {
+            "identity_asked": false,
+            "allergies_asked": true,
+            "pain_assessed": true,
+            "medical_history_asked": false,
+            "procedure_explained": false,
+            "risk_factor_assessed": false
+          },
+          "knowledge_confidence": 1.0,
+          "knowledge_verdict": "Inappropriate",
+          "communication_verdict": "Partially Appropriate",
+          "communication_confidence": 0.86
+        },
+        {
+          "flags": {
+            "identity_asked": false,
+            "allergies_asked": true,
+            "pain_assessed": true,
+            "medical_history_asked": false,
+            "procedure_explained": false,
+            "risk_factor_assessed": false
+          },
+          "knowledge_confidence": 1.0,
+          "knowledge_verdict": "Inappropriate",
+          "communication_verdict": "Partially Appropriate",
+          "communication_confidence": 0.9
+        },
+        {
+          "flags": {
+            "identity_asked": false,
+            "allergies_asked": true,
+            "pain_assessed": true,
+            "medical_history_asked": false,
+            "procedure_explained": false,
+            "risk_factor_assessed": false
+          },
+          "knowledge_confidence": 1.0,
+          "knowledge_verdict": "Inappropriate",
+          "communication_verdict": "Partially Appropriate",
+          "communication_confidence": 0.9
+        },
+        {
+          "flags": {
+            "identity_asked": false,
+            "allergies_asked": true,
+            "pain_assessed": true,
+            "medical_history_asked": false,
+            "procedure_explained": false,
+            "risk_factor_assessed": false
+          },
+          "knowledge_confidence": 1.0,
+          "knowledge_verdict": "Inappropriate",
+          "communication_verdict": "Partially Appropriate",
+          "communication_confidence": 0.9
+        }
+      ],
+      "majority_flags": {
+        "identity_asked": false,
+        "allergies_asked": true,
+        "pain_assessed": true,
+        "medical_history_asked": false,
+        "procedure_explained": false,
+        "risk_factor_assessed": false
+      },
+      "majority_communication_verdict": "Partially Appropriate",
+      "case_consistency_rate": 1.0
+    },
+    {
+      "id": "case_25",
+      "category": "full_coverage_diabetes",
+      "expected_flags": {
+        "identity_asked": true,
+        "allergies_asked": true,
+        "pain_assessed": true,
+        "medical_history_asked": true,
+        "procedure_explained": true,
+        "risk_factor_assessed": true
+      },
+      "expected_communication_verdict": "Appropriate",
+      "clinical_context": {
+        "risk_factors": [
+          "diabetes"
+        ],
+        "healing_risk": "high",
+        "infection_risk": "high"
+      },
+      "transcript": "student: Good evening, I am your nurse and I will care for your wound safely.\nstudent: Can you confirm your full name and date of birth?\nstudent: Do you have any allergies to medicines or dressing materials?\nstudent: How severe is your pain right now?\nstudent: Because diabetes can slow healing, have your glucose levels been controlled and have you noticed numbness or poor circulation?\nstudent: Do you have any other medical history that could affect recovery?\nstudent: I will explain the procedure clearly before we begin.",
+      "runs": [
+        {
+          "flags": {
+            "identity_asked": true,
+            "allergies_asked": true,
+            "pain_assessed": true,
+            "medical_history_asked": true,
+            "procedure_explained": true,
+            "risk_factor_assessed": true
+          },
+          "knowledge_confidence": 1.0,
+          "knowledge_verdict": "Partially Appropriate",
+          "communication_verdict": "Appropriate",
+          "communication_confidence": 0.86
+        },
+        {
+          "flags": {
+            "identity_asked": true,
+            "allergies_asked": true,
+            "pain_assessed": true,
+            "medical_history_asked": true,
+            "procedure_explained": true,
+            "risk_factor_assessed": true
+          },
+          "knowledge_confidence": 1.0,
+          "knowledge_verdict": "Partially Appropriate",
+          "communication_verdict": "Partially Appropriate",
+          "communication_confidence": 0.86
+        },
+        {
+          "flags": {
+            "identity_asked": true,
+            "allergies_asked": true,
+            "pain_assessed": true,
+            "medical_history_asked": true,
+            "procedure_explained": false,
+            "risk_factor_assessed": true
+          },
+          "knowledge_confidence": 1.0,
+          "knowledge_verdict": "Appropriate",
+          "communication_verdict": "Partially Appropriate",
+          "communication_confidence": 0.86
+        },
+        {
+          "flags": {
+            "identity_asked": true,
+            "allergies_asked": true,
+            "pain_assessed": true,
+            "medical_history_asked": true,
+            "procedure_explained": true,
+            "risk_factor_assessed": true
+          },
+          "knowledge_confidence": 1.0,
+          "knowledge_verdict": "Partially Appropriate",
+          "communication_verdict": "Partially Appropriate",
+          "communication_confidence": 0.93
+        },
+        {
+          "flags": {
+            "identity_asked": true,
+            "allergies_asked": true,
+            "pain_assessed": true,
+            "medical_history_asked": true,
+            "procedure_explained": false,
+            "risk_factor_assessed": true
+          },
+          "knowledge_confidence": 1.0,
+          "knowledge_verdict": "Appropriate",
+          "communication_verdict": "Partially Appropriate",
+          "communication_confidence": 0.92
+        }
+      ],
+      "majority_flags": {
+        "identity_asked": true,
+        "allergies_asked": true,
+        "pain_assessed": true,
+        "medical_history_asked": true,
+        "procedure_explained": true,
+        "risk_factor_assessed": true
+      },
+      "majority_communication_verdict": "Partially Appropriate",
+      "case_consistency_rate": 0.4
+    }
+  ]
+}
