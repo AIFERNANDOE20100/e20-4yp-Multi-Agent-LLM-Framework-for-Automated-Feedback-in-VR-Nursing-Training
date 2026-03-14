@@ -3,176 +3,198 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>WoundCareSim Evaluation Harness</title>
+    <title>WoundCareSim — Test Harness</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,300&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <div class="app-shell">
-        <header class="topbar">
-            <div>
-                <p class="eyebrow">Browser-Only Test Harness</p>
-                <h1>WoundCareSim Evaluation UI</h1>
-            </div>
-            <div class="topbar-actions">
-                <button class="btn btn-secondary" id="refreshActiveSessionBtn">Refresh Active Session</button>
-                <button class="btn btn-primary" id="connectSessionBtn">Connect to Active Session</button>
-                <button class="btn btn-danger" id="disconnectSessionBtn" disabled>Disconnect</button>
-            </div>
-        </header>
+    <div class="shell">
 
-        <section class="status-strip">
-            <div class="status-card">
-                <span class="status-label">Active Session</span>
-                <strong id="sessionId">-</strong>
-            </div>
-            <div class="status-card">
-                <span class="status-label">Session Token</span>
-                <strong id="sessionToken">-</strong>
-            </div>
-            <div class="status-card">
-                <span class="status-label">Scenario ID</span>
-                <strong id="scenarioId">-</strong>
-            </div>
-            <div class="status-card">
-                <span class="status-label">Current Step</span>
-                <strong id="currentStep" class="step-chip">-</strong>
-            </div>
-            <div class="status-card">
-                <span class="status-label">WebSocket</span>
-                <strong id="wsStatus" class="status-value disconnected">Disconnected</strong>
-            </div>
-        </section>
-
-        <main class="workspace">
-            <section class="control-panel">
-                <div class="panel">
-                    <div class="panel-header">
-                        <h2>Session Control</h2>
-                    </div>
-                    <div class="stack">
-                        <div>
-                            <label for="apiBaseUrl">API Base URL</label>
-                            <input type="text" id="apiBaseUrl" value="http://127.0.0.1:8000">
-                        </div>
-                        <div>
-                            <label for="wsBaseUrl">WebSocket Base URL</label>
-                            <input type="text" id="wsBaseUrl" value="ws://127.0.0.1:8000">
-                        </div>
-                        <div>
-                            <label for="pollStatus">Active Session Status</label>
-                            <div id="activeSessionStatus" class="inline-note">Not checked yet.</div>
-                        </div>
-                    </div>
+        <!-- SIDEBAR -->
+        <aside class="sidebar">
+            <div class="sidebar-brand">
+                <span class="brand-icon">✚</span>
+                <div>
+                    <div class="brand-name">WoundCareSim</div>
+                    <div class="brand-sub">Test Harness</div>
                 </div>
+            </div>
 
+            <div class="sidebar-section">
+                <div class="sidebar-label">Connection</div>
+                <div class="conn-field">
+                    <label>API URL</label>
+                    <input type="text" id="apiBaseUrl" value="http://127.0.0.1:8000">
+                </div>
+                <div class="conn-field">
+                    <label>WS URL</label>
+                    <input type="text" id="wsBaseUrl" value="ws://127.0.0.1:8000">
+                </div>
+                <div id="activeSessionStatus" class="status-note">Checking for active session…</div>
+            </div>
+
+            <div class="sidebar-section">
+                <div class="sidebar-label">Session</div>
+                <div class="meta-row"><span class="meta-key">ID</span><span class="meta-val" id="sessionId">—</span></div>
+                <div class="meta-row"><span class="meta-key">Scenario</span><span class="meta-val" id="scenarioId">—</span></div>
+                <div class="meta-row"><span class="meta-key">Step</span><span class="meta-val step-badge" id="currentStep">—</span></div>
+                <div class="meta-row"><span class="meta-key">Socket</span><span class="meta-val ws-badge disconnected" id="wsStatus">Offline</span></div>
+            </div>
+
+            <div class="sidebar-section sidebar-actions">
+                <button class="sb-btn sb-btn-primary" id="connectSessionBtn">Connect</button>
+                <button class="sb-btn sb-btn-ghost" id="refreshActiveSessionBtn">Refresh</button>
+                <button class="sb-btn sb-btn-danger" id="disconnectSessionBtn" disabled>Disconnect</button>
+            </div>
+
+            <!-- Audio indicator -->
+            <div class="audio-status" id="audioStatus">
+                <div class="audio-icon" id="audioIcon">♪</div>
+                <div class="audio-label" id="audioLabel">Audio ready</div>
+            </div>
+
+            <div class="sidebar-footer">
+                <button class="sb-btn sb-btn-ghost" id="refreshSessionDetailsBtn">↺ Refresh Details</button>
+                <button class="sb-btn sb-btn-ghost" id="exportJsonBtn">↓ Export Log</button>
+            </div>
+        </aside>
+
+        <!-- MAIN -->
+        <main class="main">
+
+            <!-- STEP TABS -->
+            <div class="step-tabs">
+                <div class="step-tab" id="tab-history" data-step="history">
+                    <span class="tab-num">01</span>
+                    <span class="tab-label">History</span>
+                    <span class="tab-state" id="historyStepState">Inactive</span>
+                </div>
+                <div class="step-tab" id="tab-assessment" data-step="assessment">
+                    <span class="tab-num">02</span>
+                    <span class="tab-label">Assessment</span>
+                    <span class="tab-state" id="assessmentStepState">Inactive</span>
+                </div>
+                <div class="step-tab" id="tab-cleaning" data-step="cleaning_and_dressing">
+                    <span class="tab-num">03</span>
+                    <span class="tab-label">Cleaning</span>
+                    <span class="tab-state" id="cleaningStepState">Inactive</span>
+                </div>
+            </div>
+
+            <!-- PANELS -->
+            <div class="panels">
+
+                <!-- HISTORY PANEL -->
                 <div class="panel" id="historyPanel">
-                    <div class="panel-header">
-                        <h2>1. History</h2>
-                        <span class="panel-step" id="historyStepState">Inactive</span>
-                    </div>
-                    <div class="stack">
-                        <div>
-                            <label for="historyScriptSelect">Scripted Conversation</label>
-                            <div class="inline-row">
-                                <select id="historyScriptSelect"></select>
-                                <button class="btn btn-secondary" id="loadHistoryScriptBtn">Load Script</button>
-                                <button class="btn btn-secondary" id="runHistoryScriptBtn">Run Script</button>
+                    <div class="panel-cols">
+
+                        <!-- Left: conversation -->
+                        <div class="panel-col">
+                            <div class="col-header">
+                                <h2>Patient Conversation</h2>
+                                <div class="header-actions">
+                                    <select class="compact-select" id="historyScriptSelect"></select>
+                                    <button class="pill-btn" id="loadHistoryScriptBtn">Load</button>
+                                    <button class="pill-btn pill-btn-accent" id="runHistoryScriptBtn">Run Script</button>
+                                </div>
+                            </div>
+
+                            <!-- Chat bubbles -->
+                            <div class="chat-window" id="historyResponses">
+                                <div class="chat-empty">Patient responses will appear here.</div>
+                            </div>
+
+                            <!-- Script editor -->
+                            <details class="script-details">
+                                <summary>Script editor</summary>
+                                <textarea id="historyScriptEditor" rows="5" placeholder="One message per line…"></textarea>
+                            </details>
+
+                            <!-- Input row -->
+                            <div class="input-row">
+                                <button class="mic-btn" id="sttBtn" title="Hold to record">
+                                    <span class="mic-icon" id="micIcon">🎤</span>
+                                </button>
+                                <input type="text" id="historyMessageInput" placeholder="Type a question or hold mic to speak…">
+                                <button class="send-btn" id="sendHistoryMessageBtn">Send</button>
                             </div>
                         </div>
-                        <div>
-                            <label for="historyMessageInput">Student Message</label>
-                            <div class="inline-row">
-                                <input type="text" id="historyMessageInput" placeholder="Ask the patient a question">
-                                <button class="btn btn-primary" id="sendHistoryMessageBtn">Send</button>
+
+                        <!-- Right: feedback + controls -->
+                        <div class="panel-col panel-col-right">
+                            <div class="col-header">
+                                <h2>Evaluation Feedback</h2>
+                            </div>
+                            <div class="feedback-card" id="historyFeedback">
+                                <div class="feedback-empty">Complete the step to see evaluation feedback.</div>
+                            </div>
+                            <div class="step-controls">
+                                <button class="ctrl-btn ctrl-primary" id="completeHistoryBtn">Complete Step</button>
+                                <button class="ctrl-btn ctrl-warn" id="confirmHistoryTransitionBtn" disabled>Confirm Transition</button>
                             </div>
                         </div>
-                        <div>
-                            <label for="historyScriptEditor">Loaded Script Lines</label>
-                            <textarea id="historyScriptEditor" rows="6" placeholder="One message per line"></textarea>
-                        </div>
-                        <div class="response-box">
-                            <h3>Patient Responses</h3>
-                            <div id="historyResponses" class="message-stream empty-state">No patient response yet.</div>
-                        </div>
-                        <div class="response-box">
-                            <h3>History Feedback</h3>
-                            <div id="historyFeedback" class="structured-box empty-state">No history feedback yet.</div>
-                        </div>
-                        <div class="inline-row">
-                            <button class="btn btn-success" id="completeHistoryBtn">Complete Step</button>
-                            <button class="btn btn-warning" id="confirmHistoryTransitionBtn" disabled>Confirm Step Transition</button>
-                        </div>
+
                     </div>
                 </div>
 
-                <div class="panel" id="assessmentPanel">
-                    <div class="panel-header">
-                        <h2>2. Assessment</h2>
-                        <span class="panel-step" id="assessmentStepState">Inactive</span>
+                <!-- ASSESSMENT PANEL -->
+                <div class="panel hidden" id="assessmentPanel">
+                    <div class="col-header">
+                        <h2>Wound Assessment — MCQ</h2>
+                        <div class="header-actions">
+                            <button class="pill-btn" id="answerAllCorrectBtn">All Correct</button>
+                            <button class="pill-btn" id="answerAllFirstBtn">First Options</button>
+                            <button class="pill-btn pill-btn-accent" id="completeAssessmentBtn">Complete Step</button>
+                        </div>
                     </div>
-                    <div class="stack">
-                        <div class="inline-row">
-                            <button class="btn btn-secondary" id="answerAllCorrectBtn">Answer All Correct</button>
-                            <button class="btn btn-secondary" id="answerAllFirstBtn">Answer First Options</button>
-                            <button class="btn btn-success" id="completeAssessmentBtn">Complete Step</button>
-                        </div>
-                        <div id="mcqContainer" class="stack">
-                            <div class="empty-state">Connect to a session to load MCQs.</div>
-                        </div>
-                        <div class="response-box">
-                            <h3>Assessment Summary</h3>
-                            <div id="assessmentSummary" class="structured-box empty-state">No assessment summary yet.</div>
-                        </div>
+                    <div id="mcqContainer" class="mcq-grid">
+                        <div class="feedback-empty">Connect to a session to load questions.</div>
+                    </div>
+                    <div class="feedback-card mt-16" id="assessmentSummary">
+                        <div class="feedback-empty">Assessment summary will appear here.</div>
                     </div>
                 </div>
 
-                <div class="panel" id="cleaningPanel">
-                    <div class="panel-header">
-                        <h2>3. Cleaning and Dressing</h2>
-                        <span class="panel-step" id="cleaningStepState">Inactive</span>
-                    </div>
-                    <div class="stack">
-                        <div class="inline-row">
-                            <button class="btn btn-secondary" id="runActionSequenceBtn">Run Recommended Sequence</button>
-                            <button class="btn btn-success" id="completeCleaningBtn">Complete Step</button>
-                        </div>
-                        <div id="actionGrid" class="action-grid"></div>
-                        <div class="response-box">
-                            <h3>Cleaning Feedback</h3>
-                            <div id="cleaningFeedback" class="structured-box empty-state">No action feedback yet.</div>
-                        </div>
-                        <div class="response-box">
-                            <h3>Nurse Responses</h3>
-                            <div id="nurseResponses" class="message-stream empty-state">No nurse response yet.</div>
-                        </div>
-                    </div>
-                </div>
-            </section>
+                <!-- CLEANING PANEL -->
+                <div class="panel hidden" id="cleaningPanel">
+                    <div class="panel-cols">
 
-            <aside class="log-panel">
-                <div class="panel">
-                    <div class="panel-header">
-                        <h2>Structured Backend Response</h2>
+                        <div class="panel-col">
+                            <div class="col-header">
+                                <h2>Procedure Actions</h2>
+                                <div class="header-actions">
+                                    <button class="pill-btn pill-btn-accent" id="runActionSequenceBtn">Run Sequence</button>
+                                    <button class="pill-btn" id="completeCleaningBtn">Complete Step</button>
+                                </div>
+                            </div>
+                            <div id="actionGrid" class="action-grid"></div>
+
+                            <div class="col-header" style="margin-top:20px">
+                                <h2>Nurse Interaction</h2>
+                            </div>
+                            <div class="chat-window compact" id="nurseResponses">
+                                <div class="chat-empty">Nurse responses appear here.</div>
+                            </div>
+                        </div>
+
+                        <div class="panel-col panel-col-right">
+                            <div class="col-header">
+                                <h2>Real-time Feedback</h2>
+                            </div>
+                            <div class="feedback-card" id="cleaningFeedback">
+                                <div class="feedback-empty">Perform an action to see feedback.</div>
+                            </div>
+                        </div>
+
                     </div>
-                    <pre id="structuredResponse" class="json-view empty-state">No backend response yet.</pre>
                 </div>
-                <div class="panel log-panel-fill">
-                    <div class="panel-header">
-                        <h2>WebSocket Log</h2>
-                        <button class="btn btn-secondary btn-small" id="clearLogBtn">Clear</button>
-                    </div>
-                    <div id="logConsole" class="log-console">
-                        <div class="empty-state">No WebSocket traffic yet.</div>
-                    </div>
-                </div>
-            </aside>
+
+            </div><!-- /panels -->
         </main>
 
-        <footer class="footer-bar">
-            <button class="btn btn-secondary" id="refreshSessionDetailsBtn">Refresh Session Details</button>
-            <button class="btn btn-primary" id="exportJsonBtn">Export Session Log as JSON</button>
-        </footer>
-    </div>
+    </div><!-- /shell -->
 
     <script src="app.js"></script>
 </body>
