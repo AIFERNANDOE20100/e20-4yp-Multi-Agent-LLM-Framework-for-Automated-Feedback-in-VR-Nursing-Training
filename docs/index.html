@@ -1,1 +1,1739 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Multi-Agent LLM Framework for Automated Feedback in VR Nursing Training</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,300&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #060d1a;
+    --bg2: #0b1628;
+    --bg3: #0f1e38;
+    --surface: #132240;
+    --border: #1e3358;
+    --accent: #38bdf8;
+    --accent2: #818cf8;
+    --accent3: #34d399;
+    --text: #e2eaf5;
+    --muted: #7a94b8;
+    --heading: #f0f6ff;
+    --agent-purple: #a78bfa;
+    --agent-purple-bg: #1e1340;
+    --det-blue: #60a5fa;
+    --det-blue-bg: #0f2040;
+    --rag-teal: #2dd4bf;
+    --rag-teal-bg: #0d2830;
+    --audio-amber: #fbbf24;
+    --ext-green: #34d399;
+  }
 
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  html { scroll-behavior: smooth; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 15px;
+    line-height: 1.7;
+    overflow-x: hidden;
+  }
+
+  /* ─── NOISE OVERLAY ─── */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.03'/%3E%3C/svg%3E");
+    pointer-events: none;
+    z-index: 0;
+    opacity: 0.4;
+  }
+
+  /* ─── GLOW ORBS ─── */
+  .orb {
+    position: fixed;
+    border-radius: 50%;
+    filter: blur(120px);
+    pointer-events: none;
+    z-index: 0;
+  }
+  .orb-1 { width: 600px; height: 600px; background: rgba(56,189,248,0.06); top: -200px; right: -200px; }
+  .orb-2 { width: 500px; height: 500px; background: rgba(129,140,248,0.06); bottom: 20%; left: -150px; }
+  .orb-3 { width: 400px; height: 400px; background: rgba(52,211,153,0.04); top: 50%; right: 10%; }
+
+  /* ─── NAV ─── */
+  nav {
+    position: fixed;
+    top: 0; left: 0; right: 0;
+    z-index: 100;
+    background: rgba(6,13,26,0.85);
+    backdrop-filter: blur(20px);
+    border-bottom: 1px solid var(--border);
+    padding: 0 2rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    height: 60px;
+  }
+
+  .nav-logo {
+    font-family: 'Syne', sans-serif;
+    font-weight: 800;
+    font-size: 0.85rem;
+    color: var(--accent);
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    text-decoration: none;
+  }
+
+  .nav-links {
+    display: flex;
+    gap: 2rem;
+    list-style: none;
+  }
+
+  .nav-links a {
+    color: var(--muted);
+    text-decoration: none;
+    font-size: 0.82rem;
+    font-weight: 500;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    transition: color 0.2s;
+  }
+  .nav-links a:hover { color: var(--accent); }
+
+  /* ─── SECTIONS WRAPPER ─── */
+  .container {
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 0 2rem;
+    position: relative;
+    z-index: 1;
+  }
+
+  section {
+    padding: 100px 0;
+  }
+
+  /* ─── HERO ─── */
+  .hero {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    position: relative;
+    padding: 120px 0 80px;
+    overflow: hidden;
+  }
+
+  .hero-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    background: rgba(56,189,248,0.08);
+    border: 1px solid rgba(56,189,248,0.2);
+    border-radius: 100px;
+    padding: 0.35rem 1rem;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.72rem;
+    color: var(--accent);
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    margin-bottom: 2rem;
+    animation: fadeUp 0.6s ease forwards;
+  }
+
+  .hero-badge::before {
+    content: '';
+    width: 6px; height: 6px;
+    border-radius: 50%;
+    background: var(--accent);
+    animation: pulse 2s ease infinite;
+  }
+
+  @keyframes pulse {
+    0%, 100% { opacity: 1; transform: scale(1); }
+    50% { opacity: 0.4; transform: scale(0.7); }
+  }
+
+  .hero h1 {
+    font-family: 'Syne', sans-serif;
+    font-weight: 800;
+    font-size: clamp(2.2rem, 5vw, 3.8rem);
+    line-height: 1.1;
+    color: var(--heading);
+    max-width: 820px;
+    margin-bottom: 1.5rem;
+    animation: fadeUp 0.6s 0.1s ease both;
+  }
+
+  .hero h1 span { color: var(--accent); }
+
+  .hero-subtitle {
+    font-size: 1.1rem;
+    color: var(--muted);
+    max-width: 620px;
+    margin-bottom: 3rem;
+    animation: fadeUp 0.6s 0.2s ease both;
+  }
+
+  .hero-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.6rem;
+    animation: fadeUp 0.6s 0.3s ease both;
+  }
+
+  .tag {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 0.35rem 0.9rem;
+    font-size: 0.78rem;
+    color: var(--muted);
+    font-family: 'JetBrains Mono', monospace;
+  }
+
+  .hero-grid-bg {
+    position: absolute;
+    inset: 0;
+    background-image:
+      linear-gradient(rgba(56,189,248,0.04) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(56,189,248,0.04) 1px, transparent 1px);
+    background-size: 60px 60px;
+    mask-image: radial-gradient(ellipse at 70% 50%, black 20%, transparent 75%);
+    pointer-events: none;
+  }
+
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(24px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  /* ─── TEAM ─── */
+  .team-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1.2rem;
+    margin-bottom: 2rem;
+  }
+
+  .supervisor-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1.2rem;
+    max-width: 600px;
+    margin: 0 auto;
+  }
+
+  .person-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 1.5rem;
+    text-align: center;
+    transition: border-color 0.25s, transform 0.25s;
+  }
+  .person-card:hover { border-color: var(--accent); transform: translateY(-4px); }
+
+  .person-avatar {
+    width: 52px; height: 52px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--accent), var(--accent2));
+    display: flex; align-items: center; justify-content: center;
+    font-family: 'Syne', sans-serif;
+    font-weight: 800;
+    font-size: 1.2rem;
+    color: var(--bg);
+    margin: 0 auto 1rem;
+  }
+
+  .supervisor-card .person-avatar {
+    background: linear-gradient(135deg, var(--accent3), var(--rag-teal));
+  }
+
+  .person-name {
+    font-family: 'Syne', sans-serif;
+    font-weight: 700;
+    font-size: 0.95rem;
+    color: var(--heading);
+    margin-bottom: 0.25rem;
+  }
+
+  .person-role {
+    font-size: 0.75rem;
+    color: var(--muted);
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    margin-bottom: 0.5rem;
+  }
+
+  .person-email {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.72rem;
+    color: var(--accent);
+    text-decoration: none;
+  }
+  .person-email:hover { text-decoration: underline; }
+
+  /* ─── SECTION HEADERS ─── */
+  .section-label {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.72rem;
+    color: var(--accent);
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    margin-bottom: 0.75rem;
+  }
+
+  h2 {
+    font-family: 'Syne', sans-serif;
+    font-weight: 700;
+    font-size: clamp(1.6rem, 3vw, 2.4rem);
+    color: var(--heading);
+    line-height: 1.2;
+    margin-bottom: 1.2rem;
+  }
+
+  .section-intro {
+    color: var(--muted);
+    max-width: 700px;
+    font-size: 1rem;
+    margin-bottom: 3rem;
+  }
+
+  /* ─── ABSTRACT ─── */
+  .abstract-box {
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    border-left: 4px solid var(--accent);
+    border-radius: 14px;
+    padding: 2rem 2.5rem;
+    font-size: 0.97rem;
+    line-height: 1.8;
+    color: var(--text);
+  }
+
+  /* ─── PROBLEM CARDS ─── */
+  .problem-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1.2rem;
+    margin-bottom: 2rem;
+  }
+
+  .problem-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 1.8rem;
+    transition: border-color 0.25s;
+  }
+  .problem-card:hover { border-color: rgba(56,189,248,0.4); }
+
+  .problem-num {
+    font-family: 'Syne', sans-serif;
+    font-size: 2.5rem;
+    font-weight: 800;
+    color: rgba(56,189,248,0.12);
+    line-height: 1;
+    margin-bottom: 0.75rem;
+  }
+
+  .problem-card h3 {
+    font-family: 'Syne', sans-serif;
+    font-size: 0.95rem;
+    font-weight: 700;
+    color: var(--heading);
+    margin-bottom: 0.6rem;
+  }
+
+  .problem-card p {
+    font-size: 0.88rem;
+    color: var(--muted);
+  }
+
+  .rq-box {
+    background: linear-gradient(135deg, rgba(56,189,248,0.06), rgba(129,140,248,0.06));
+    border: 1px solid rgba(56,189,248,0.2);
+    border-radius: 14px;
+    padding: 1.5rem 2rem;
+    text-align: center;
+    color: var(--text);
+    font-size: 1rem;
+    font-style: italic;
+  }
+
+  /* ─── OBJECTIVES ─── */
+  .objectives-list {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+  }
+
+  .objective-item {
+    display: flex;
+    gap: 1.2rem;
+    align-items: flex-start;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 1.3rem 1.5rem;
+    transition: border-color 0.25s;
+  }
+  .objective-item:hover { border-color: var(--accent2); }
+
+  .obj-num {
+    font-family: 'Syne', sans-serif;
+    font-weight: 800;
+    font-size: 1.1rem;
+    color: var(--accent2);
+    min-width: 32px;
+  }
+
+  .objective-item p {
+    font-size: 0.95rem;
+    color: var(--text);
+  }
+
+  /* ─── WORKFLOW ─── */
+  .workflow-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 0;
+    position: relative;
+  }
+
+  .workflow-grid::before {
+    content: '';
+    position: absolute;
+    top: 52px;
+    left: 16.5%;
+    right: 16.5%;
+    height: 2px;
+    background: linear-gradient(90deg, var(--accent), var(--accent2));
+    z-index: 0;
+  }
+
+  .step-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 2rem 1.5rem;
+    text-align: center;
+    position: relative;
+    z-index: 1;
+    margin: 0 0.6rem;
+    transition: border-color 0.25s, transform 0.25s;
+  }
+  .step-card:hover { border-color: var(--accent); transform: translateY(-5px); }
+
+  .step-icon {
+    width: 56px; height: 56px;
+    border-radius: 50%;
+    background: var(--bg);
+    border: 2px solid var(--accent);
+    display: flex; align-items: center; justify-content: center;
+    margin: 0 auto 1.2rem;
+    font-size: 1.3rem;
+  }
+
+  .step-num {
+    position: absolute;
+    top: -10px; left: 50%;
+    transform: translateX(-50%);
+    background: var(--accent);
+    color: var(--bg);
+    font-family: 'Syne', sans-serif;
+    font-weight: 800;
+    font-size: 0.7rem;
+    padding: 0.2rem 0.6rem;
+    border-radius: 100px;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+  }
+
+  .step-card h3 {
+    font-family: 'Syne', sans-serif;
+    font-size: 1rem;
+    font-weight: 700;
+    color: var(--heading);
+    margin-bottom: 0.7rem;
+  }
+
+  .step-card p {
+    font-size: 0.84rem;
+    color: var(--muted);
+    line-height: 1.6;
+  }
+
+  /* ─── AGENTS ─── */
+  .agents-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1.2rem;
+  }
+
+  .agent-card {
+    background: var(--agent-purple-bg);
+    border: 1px solid rgba(167,139,250,0.2);
+    border-radius: 14px;
+    padding: 1.6rem;
+    transition: border-color 0.25s, transform 0.25s;
+    position: relative;
+    overflow: hidden;
+  }
+  .agent-card:hover { border-color: var(--agent-purple); transform: translateY(-4px); }
+
+  .agent-card.det {
+    background: var(--det-blue-bg);
+    border-color: rgba(96,165,250,0.2);
+  }
+  .agent-card.det:hover { border-color: var(--det-blue); }
+
+  .agent-num {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.7rem;
+    color: var(--agent-purple);
+    letter-spacing: 0.08em;
+    margin-bottom: 0.5rem;
+    text-transform: uppercase;
+  }
+  .agent-card.det .agent-num { color: var(--det-blue); }
+
+  .agent-card h3 {
+    font-family: 'Syne', sans-serif;
+    font-weight: 700;
+    font-size: 1rem;
+    color: var(--heading);
+    margin-bottom: 0.75rem;
+  }
+
+  .agent-card p {
+    font-size: 0.84rem;
+    color: var(--muted);
+    line-height: 1.6;
+  }
+
+  .agent-contrib {
+    margin-top: 0.8rem;
+    display: inline-block;
+    background: rgba(167,139,250,0.12);
+    border-radius: 6px;
+    padding: 0.25rem 0.7rem;
+    font-size: 0.75rem;
+    color: var(--agent-purple);
+    font-family: 'JetBrains Mono', monospace;
+  }
+  .agent-card.det .agent-contrib {
+    background: rgba(96,165,250,0.12);
+    color: var(--det-blue);
+  }
+
+  /* ─── RAG & TECH ─── */
+  .two-col {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 2rem;
+    align-items: start;
+  }
+
+  .rag-box {
+    background: var(--rag-teal-bg);
+    border: 1px solid rgba(45,212,191,0.2);
+    border-radius: 14px;
+    padding: 1.8rem;
+  }
+
+  .rag-box h3 {
+    font-family: 'Syne', sans-serif;
+    font-weight: 700;
+    font-size: 1.1rem;
+    color: var(--rag-teal);
+    margin-bottom: 1rem;
+  }
+
+  .rag-flow {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+
+  .rag-step {
+    display: flex;
+    align-items: center;
+    gap: 0.8rem;
+    font-size: 0.85rem;
+    color: var(--text);
+  }
+
+  .rag-step-dot {
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    background: var(--rag-teal);
+    flex-shrink: 0;
+  }
+
+  .rag-arrow {
+    color: var(--rag-teal);
+    font-size: 0.75rem;
+    padding-left: 1.1rem;
+  }
+
+  .guidelines-list {
+    margin-top: 1.2rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+
+  .guideline-item {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    font-size: 0.83rem;
+    color: var(--muted);
+  }
+
+  .guideline-item::before {
+    content: '📄';
+    font-size: 0.8rem;
+  }
+
+  /* ─── SCORING TABLE ─── */
+  .score-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.88rem;
+    margin-top: 1rem;
+  }
+
+  .score-table th {
+    background: var(--surface);
+    color: var(--accent);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.75rem;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    padding: 0.75rem 1rem;
+    text-align: left;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .score-table td {
+    padding: 0.65rem 1rem;
+    border-bottom: 1px solid rgba(30,51,88,0.5);
+    color: var(--text);
+  }
+
+  .score-table tr:last-child td { border-bottom: none; }
+  .score-table tr:hover td { background: rgba(255,255,255,0.02); }
+
+  .score-pill {
+    background: rgba(56,189,248,0.1);
+    border-radius: 100px;
+    padding: 0.15rem 0.6rem;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.75rem;
+    color: var(--accent);
+  }
+
+  /* ─── EVALUATION ─── */
+  .eval-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1.2rem;
+    margin-bottom: 3rem;
+  }
+
+  .eval-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 1.6rem;
+    transition: border-color 0.25s;
+  }
+  .eval-card:hover { border-color: var(--accent3); }
+
+  .eval-num {
+    font-family: 'Syne', sans-serif;
+    font-weight: 800;
+    font-size: 2rem;
+    color: var(--accent);
+    line-height: 1;
+    margin-bottom: 0.4rem;
+  }
+
+  .eval-card h3 {
+    font-family: 'Syne', sans-serif;
+    font-weight: 700;
+    font-size: 0.9rem;
+    color: var(--heading);
+    margin-bottom: 0.5rem;
+  }
+
+  .eval-card p {
+    font-size: 0.82rem;
+    color: var(--muted);
+    line-height: 1.5;
+  }
+
+  /* ─── RESULTS METRICS ─── */
+  .metrics-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 1.2rem;
+    margin-bottom: 2.5rem;
+  }
+
+  .metric-box {
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 1.5rem;
+    text-align: center;
+  }
+
+  .metric-value {
+    font-family: 'Syne', sans-serif;
+    font-weight: 800;
+    font-size: 2rem;
+    line-height: 1;
+    margin-bottom: 0.4rem;
+  }
+
+  .metric-value.green { color: var(--ext-green); }
+  .metric-value.blue  { color: var(--accent); }
+  .metric-value.purple { color: var(--agent-purple); }
+  .metric-value.amber { color: var(--audio-amber); }
+
+  .metric-label {
+    font-size: 0.78rem;
+    color: var(--muted);
+    line-height: 1.4;
+  }
+
+  .latency-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.88rem;
+    background: var(--surface);
+    border-radius: 14px;
+    overflow: hidden;
+    border: 1px solid var(--border);
+    margin-bottom: 2rem;
+  }
+
+  .latency-table th {
+    background: var(--bg3);
+    color: var(--accent);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.72rem;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    padding: 0.85rem 1.2rem;
+    text-align: left;
+  }
+
+  .latency-table td {
+    padding: 0.75rem 1.2rem;
+    border-top: 1px solid var(--border);
+    color: var(--text);
+  }
+
+  .latency-table tr:hover td { background: rgba(255,255,255,0.02); }
+
+  .latency-val {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.85rem;
+    color: var(--accent);
+  }
+
+  /* ─── TECH STACK ─── */
+  .stack-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 1rem;
+  }
+
+  .stack-item {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 1.2rem 1rem;
+    text-align: center;
+    transition: border-color 0.25s;
+  }
+  .stack-item:hover { border-color: var(--accent); }
+
+  .stack-layer {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.65rem;
+    color: var(--muted);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    margin-bottom: 0.4rem;
+  }
+
+  .stack-tech {
+    font-family: 'Syne', sans-serif;
+    font-weight: 700;
+    font-size: 0.88rem;
+    color: var(--heading);
+  }
+
+  /* ─── IMPACT ─── */
+  .impact-three {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1.2rem;
+  }
+
+  .impact-card {
+    border-radius: 14px;
+    padding: 1.8rem;
+    border: 1px solid;
+  }
+
+  .impact-card.green-card {
+    background: rgba(52,211,153,0.05);
+    border-color: rgba(52,211,153,0.2);
+  }
+  .impact-card.red-card {
+    background: rgba(239,68,68,0.05);
+    border-color: rgba(239,68,68,0.2);
+  }
+  .impact-card.blue-card {
+    background: rgba(56,189,248,0.05);
+    border-color: rgba(56,189,248,0.2);
+  }
+
+  .impact-card h3 {
+    font-family: 'Syne', sans-serif;
+    font-weight: 700;
+    font-size: 1rem;
+    margin-bottom: 1rem;
+  }
+  .green-card h3 { color: var(--ext-green); }
+  .red-card h3 { color: #f87171; }
+  .blue-card h3 { color: var(--accent); }
+
+  .impact-card ul {
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: 0.6rem;
+  }
+
+  .impact-card li {
+    font-size: 0.85rem;
+    color: var(--muted);
+    padding-left: 1.1rem;
+    position: relative;
+    line-height: 1.5;
+  }
+
+  .impact-card li::before {
+    content: '→';
+    position: absolute;
+    left: 0;
+    color: var(--muted);
+    font-size: 0.75rem;
+  }
+
+  /* ─── CONCLUSION ─── */
+  .conclusion-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1.2rem;
+  }
+
+  .conclusion-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 1.8rem;
+    text-align: center;
+  }
+
+  .conclusion-card .icon {
+    font-size: 2rem;
+    margin-bottom: 0.8rem;
+  }
+
+  .conclusion-card h3 {
+    font-family: 'Syne', sans-serif;
+    font-weight: 700;
+    font-size: 0.95rem;
+    color: var(--heading);
+    margin-bottom: 0.6rem;
+  }
+
+  .conclusion-card p {
+    font-size: 0.83rem;
+    color: var(--muted);
+    line-height: 1.6;
+  }
+
+  /* ─── LINKS SECTION ─── */
+  .links-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 1rem;
+  }
+
+  .link-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 1.2rem;
+    text-decoration: none;
+    text-align: center;
+    transition: border-color 0.25s, transform 0.25s;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.5rem;
+  }
+  .link-card:hover { border-color: var(--accent); transform: translateY(-3px); }
+
+  .link-icon { font-size: 1.4rem; }
+
+  .link-label {
+    font-family: 'Syne', sans-serif;
+    font-weight: 700;
+    font-size: 0.85rem;
+    color: var(--heading);
+  }
+
+  .link-url {
+    font-size: 0.72rem;
+    color: var(--accent);
+    font-family: 'JetBrains Mono', monospace;
+  }
+
+  /* ─── PUBLICATIONS ─── */
+  .pub-item {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 1.3rem 1.6rem;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    margin-bottom: 0.8rem;
+    color: var(--muted);
+    font-size: 0.88rem;
+    font-style: italic;
+  }
+
+  .pub-item .pub-icon {
+    font-size: 1.2rem;
+    flex-shrink: 0;
+  }
+
+  /* ─── FOOTER ─── */
+  footer {
+    border-top: 1px solid var(--border);
+    padding: 2.5rem 0;
+    text-align: center;
+    color: var(--muted);
+    font-size: 0.82rem;
+    position: relative;
+    z-index: 1;
+  }
+
+  footer a {
+    color: var(--accent);
+    text-decoration: none;
+  }
+
+  /* ─── DIVIDER ─── */
+  .divider {
+    height: 1px;
+    background: linear-gradient(90deg, transparent, var(--border), transparent);
+    margin: 0 2rem;
+  }
+
+  /* ─── RELATED WORKS ─── */
+  .relwork-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1.2rem;
+  }
+
+  .relwork-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 1.4rem;
+    transition: border-color 0.25s;
+  }
+  .relwork-card:hover { border-color: var(--accent2); }
+
+  .relwork-card h3 {
+    font-family: 'Syne', sans-serif;
+    font-weight: 700;
+    font-size: 0.9rem;
+    color: var(--heading);
+    margin-bottom: 0.5rem;
+  }
+
+  .relwork-card p {
+    font-size: 0.83rem;
+    color: var(--muted);
+    line-height: 1.6;
+  }
+
+  /* ─── SCENARIOS ─── */
+  .scenarios-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1.5rem;
+  }
+
+  .scenario-card {
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 1.8rem;
+    transition: border-color 0.25s;
+  }
+  .scenario-card:hover { border-color: var(--accent); }
+
+  .scenario-badge {
+    display: inline-block;
+    background: rgba(56,189,248,0.1);
+    border: 1px solid rgba(56,189,248,0.2);
+    border-radius: 6px;
+    padding: 0.25rem 0.7rem;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.72rem;
+    color: var(--accent);
+    margin-bottom: 0.8rem;
+  }
+
+  .scenario-card h3 {
+    font-family: 'Syne', sans-serif;
+    font-weight: 700;
+    font-size: 1rem;
+    color: var(--heading);
+    margin-bottom: 0.6rem;
+  }
+
+  .scenario-card p {
+    font-size: 0.85rem;
+    color: var(--muted);
+    line-height: 1.6;
+  }
+
+  /* ─── SCROLL ANIMATION ─── */
+  .fade-in {
+    opacity: 0;
+    transform: translateY(30px);
+    transition: opacity 0.6s ease, transform 0.6s ease;
+  }
+  .fade-in.visible {
+    opacity: 1;
+    transform: translateY(0);
+  }
+</style>
+</head>
+<body>
+
+<div class="orb orb-1"></div>
+<div class="orb orb-2"></div>
+<div class="orb orb-3"></div>
+
+<!-- NAV -->
+<nav>
+  <a class="nav-logo" href="#">E20-4YP · Group 27</a>
+  <ul class="nav-links">
+    <li><a href="#abstract">Abstract</a></li>
+    <li><a href="#related-works">Related Works</a></li>
+    <li><a href="#methodology">Methodology</a></li>
+    <li><a href="#results">Results</a></li>
+    <li><a href="#conclusion">Conclusion</a></li>
+    <li><a href="#links">Links</a></li>
+  </ul>
+</nav>
+
+<!-- HERO -->
+<section class="hero">
+  <div class="hero-grid-bg"></div>
+  <div class="container">
+    <div class="hero-badge">Final Year Project · 2025</div>
+    <h1>Multi-Agent <span>LLM Framework</span> for Automated Feedback in VR Nursing Training</h1>
+    <p class="hero-subtitle">A hybrid deterministic and AI-driven backend that provides real-time, clinically grounded feedback to nursing students in a Virtual Reality wound care simulation.</p>
+    <div class="hero-tags">
+      <span class="tag">Multi-Agent Systems</span>
+      <span class="tag">LLM / GPT-4</span>
+      <span class="tag">VR Simulation</span>
+      <span class="tag">RAG Pipeline</span>
+      <span class="tag">FastAPI</span>
+      <span class="tag">Clinical NLP</span>
+      <span class="tag">Wound Care</span>
+    </div>
+  </div>
+</section>
+
+<div class="divider"></div>
+
+<!-- TEAM -->
+<section id="team">
+  <div class="container fade-in">
+    <div class="section-label">Our Team</div>
+    <h2>Team Members</h2>
+    <div class="team-grid">
+      <div class="person-card">
+        <div class="person-avatar">M</div>
+        <div class="person-name">Malintha K.M.K.</div>
+        <div class="person-role">Student Researcher</div>
+        <a class="person-email" href="mailto:e20243@eng.pdn.ac.lk">e20243@eng.pdn.ac.lk</a>
+      </div>
+      <div class="person-card">
+        <div class="person-avatar">F</div>
+        <div class="person-name">Fernando A.I.</div>
+        <div class="person-role">Student Researcher</div>
+        <a class="person-email" href="mailto:e20100@eng.pdn.ac.lk">e20110@eng.pdn.ac.lk</a>
+      </div>
+      <div class="person-card">
+        <div class="person-avatar">W</div>
+        <div class="person-name">Wickramaarachchi P.A.</div>
+        <div class="person-role">Student Researcher</div>
+        <a class="person-email" href="mailto:e20434@eng.pdn.ac.lk">e20432@eng.pdn.ac.lk</a>
+      </div>
+    </div>
+
+    <div class="section-label" style="margin-top:2.5rem;">Supervisors</div>
+    <div class="supervisor-grid">
+      <div class="person-card supervisor-card">
+        <div class="person-avatar">Y</div>
+        <div class="person-name">Mrs. Yasodha Vimukthi</div>
+        <div class="person-role">Project Supervisor</div>
+        <a class="person-email" href="mailto:yasodha@eng.pdn.ac.lk">yasodha@eng.pdn.ac.lk</a>
+      </div>
+      <div class="person-card supervisor-card">
+        <div class="person-avatar">U</div>
+        <div class="person-name">Dr. Upul Jayasinghe</div>
+        <div class="person-role">Project Supervisor</div>
+        <a class="person-email" href="mailto:upuljaya@eng.pdn.ac.lk">upuljaya@eng.pdn.ac.lk</a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<div class="divider"></div>
+
+<!-- ABSTRACT -->
+<section id="abstract">
+  <div class="container fade-in">
+    <div class="section-label">Summary</div>
+    <h2>Abstract</h2>
+    <div class="abstract-box">
+      Automated evaluation in virtual reality (VR)-based nursing education presents significant challenges in delivering clinically accurate and pedagogically sound feedback comparable to expert nurse assessments. Existing AI-driven systems often lack reliability, transparency, and alignment with established nursing competency frameworks, limiting their effectiveness in high-stakes educational settings. This paper presents a multi-agent Large Language Model (LLM) framework that addresses these limitations through a hybrid deterministic and LLM architecture deployed in a VR wound care nursing simulation. Six specialized agents evaluate distinct dimensions of nursing competence simultaneously: patient interaction fidelity, procedural prerequisite compliance, clinical knowledge coverage, communication quality, material verification, and formative feedback synthesis. Safety-critical pass/fail decisions are governed exclusively by deterministic logic to prevent hallucination, while the LLM is used for educational explanation and feedback narration. All agent feedback is grounded in verified clinical guidelines through a Retrieval-Augmented Generation (RAG) pipeline. The system was evaluated across six complementary pillars: deterministic logic correctness, full API lifecycle integration, AI agent quality assessment using a golden dataset, real-time latency profiling, fault injection reliability testing, and speech interface accuracy measurement. Results demonstrate that the hybrid multi-agent approach successfully decomposes complex nursing competence into evaluable dimensions while maintaining clinical safety guarantees.
+    </div>
+  </div>
+</section>
+
+<div class="divider"></div>
+
+<!-- RESEARCH PROBLEM -->
+<section id="problem">
+  <div class="container fade-in">
+    <div class="section-label">Research Problem</div>
+    <h2>The Problem We Solve</h2>
+    <p class="section-intro">Nursing education today has critical gaps that prevent scalable, intelligent training at the level quality required for clinical safety.</p>
+
+    <div class="problem-grid">
+      <div class="problem-card">
+        <div class="problem-num">01</div>
+        <h3>No Scalable Feedback</h3>
+        <p>Traditional clinical training relies entirely on human supervisors — limited availability and scalability prevents training large student cohorts effectively.</p>
+      </div>
+      <div class="problem-card">
+        <div class="problem-num">02</div>
+        <h3>Passive VR Simulations</h3>
+        <p>VR nursing simulations exist but lack intelligent real-time feedback. Students finish simulations with no understanding of what was done correctly or incorrectly.</p>
+      </div>
+      <div class="problem-card">
+        <div class="problem-num">03</div>
+        <h3>Generic or Delayed Feedback</h3>
+        <p>Students receive generic, delayed, or no feedback after simulation sessions — missing the critical window for learning correction that formative assessment requires.</p>
+      </div>
+    </div>
+
+    <div class="rq-box">
+      <strong>Research Question:</strong> How can we automate meaningful, clinically grounded feedback in a VR nursing training environment using Large Language Models?
+    </div>
+  </div>
+</section>
+
+<div class="divider"></div>
+
+<!-- RELATED WORKS -->
+<section id="related-works">
+  <div class="container fade-in">
+    <div class="section-label">Literature Review</div>
+    <h2>Related Works</h2>
+    <p class="section-intro">Our system builds on four key research paradigms from the literature on AI-driven educational feedback and multi-agent systems.</p>
+
+    <div class="relwork-grid">
+      <div class="relwork-card">
+        <h3>🤖 Multi-Agent LLM Systems</h3>
+        <p>Prior work established that decomposing complex evaluation tasks across specialised agents outperforms monolithic LLM approaches. Frameworks like AutoGen and LangGraph demonstrated that agent collaboration produces more reliable and diverse outputs than single-model evaluation, directly motivating our six-agent architecture.</p>
+      </div>
+      <div class="relwork-card">
+        <h3>📚 Retrieval-Augmented Generation (RAG)</h3>
+        <p>RAG frameworks ground LLM outputs in verified external knowledge, significantly reducing hallucination in domain-specific settings. In clinical education, grounding feedback in authoritative guidelines was shown to be essential for safety and accuracy — a design principle central to our system's evaluation pipeline.</p>
+      </div>
+      <div class="relwork-card">
+        <h3>🔒 Hybrid Deterministic-LLM Architectures</h3>
+        <p>Research in safety-critical AI systems established that combining rule-based deterministic logic with LLM flexibility achieves better reliability than either approach alone. This informed our Clinical Agent design: pass/fail decisions are hardcoded while the LLM is reserved for educational explanation only.</p>
+      </div>
+      <div class="relwork-card">
+        <h3>🏥 AI in Clinical Skills Education</h3>
+        <p>Studies on AI-powered clinical simulation feedback demonstrated that formative, non-punitive feedback aligned with competency frameworks improves student learning outcomes. Prior work on automated nursing assessment also highlighted the need for multi-dimensional evaluation covering both knowledge and communication quality.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<div class="divider"></div>
+
+<!-- METHODOLOGY -->
+<section id="methodology">
+  <div class="container fade-in">
+    <div class="section-label">System Design</div>
+    <h2>Methodology</h2>
+
+    <!-- OBJECTIVES -->
+    <p class="section-intro">Four core research objectives drove the system design.</p>
+    <div class="objectives-list" style="margin-bottom:4rem;">
+      <div class="objective-item">
+        <div class="obj-num">01</div>
+        <p>Design a <strong>multi-agent LLM framework</strong> that evaluates multiple dimensions of nursing competence simultaneously using specialised AI agents.</p>
+      </div>
+      <div class="objective-item">
+        <div class="obj-num">02</div>
+        <p>Integrate <strong>Retrieval-Augmented Generation (RAG)</strong> to ground all feedback in evidence-based clinical guidelines rather than model training knowledge.</p>
+      </div>
+      <div class="objective-item">
+        <div class="obj-num">03</div>
+        <p>Build a complete <strong>VR-connected backend</strong> with real-time voice interaction, automated evaluation, and a teacher management portal for content updates.</p>
+      </div>
+      <div class="objective-item">
+        <div class="obj-num">04</div>
+        <p>Evaluate the system across <strong>six complementary pillars</strong>: deterministic logic, integration, AI agent quality, performance, fault tolerance, and speech accuracy.</p>
+      </div>
+    </div>
+
+    <!-- SCENARIOS -->
+    <div class="section-label">Clinical Scenarios</div>
+    <h2 style="margin-bottom:1rem;">Training Scenarios</h2>
+    <p class="section-intro">The system currently supports two wound care nursing scenarios stored as structured JSON documents in Firebase Firestore.</p>
+
+    <div class="scenarios-grid" style="margin-bottom:4rem;">
+      <div class="scenario-card">
+        <div class="scenario-badge">Scenario 001</div>
+        <h3>Post-Operative Clean Wound</h3>
+        <p>Mr. Sunil Perera, 52-year-old male with hypertension. Post-operative clean surgical wound on the left forearm. Known allergies to Penicillin and Latex. Standard wound healing risk profile.</p>
+      </div>
+      <div class="scenario-card">
+        <div class="scenario-badge">Scenario 002</div>
+        <h3>Diabetic Patient Wound Care</h3>
+        <p>Patient with Type 2 Diabetes Mellitus. Elevated infection risk, impaired wound healing. Additional expected clinical reasoning required — blood sugar control, HbA1c assessment, and diabetes-specific risk factor evaluation.</p>
+      </div>
+    </div>
+
+    <!-- WORKFLOW -->
+    <div class="section-label">Clinical Workflow</div>
+    <h2 style="margin-bottom:1rem;">Three-Step State Machine</h2>
+    <p class="section-intro">The student's simulation is governed by a linear state machine — steps must be completed in strict order.</p>
+
+    <div class="workflow-grid" style="margin-bottom:4rem;">
+      <div class="step-card">
+        <div class="step-num">Step 1</div>
+        <div class="step-icon">🗣️</div>
+        <h3>History Taking</h3>
+        <p>Student interviews the virtual AI patient using voice or text. Must confirm identity, check allergies, assess pain, take medical history, and explain the procedure. Diabetic patients require additional risk factor questions.</p>
+      </div>
+      <div class="step-card">
+        <div class="step-icon">📋</div>
+        <div class="step-num">Step 2</div>
+        <h3>Wound Assessment</h3>
+        <p>Student answers Multiple Choice Questions about the wound shown in VR — covering wound type, anatomical location, exudate, tissue colour, and signs of infection. Evaluated deterministically.</p>
+      </div>
+      <div class="step-card">
+        <div class="step-icon">🏥</div>
+        <div class="step-num">Step 3</div>
+        <h3>Cleaning & Dressing</h3>
+        <p>Student performs nine sequential physical actions in VR: hand hygiene, trolley cleaning, solution selection and verification, dressing selection, materials arrangement, and trolley transport to patient.</p>
+      </div>
+    </div>
+
+    <!-- AGENTS -->
+    <div class="section-label">Multi-Agent Framework</div>
+    <h2 style="margin-bottom:1rem;">Six Specialised Agents</h2>
+    <p class="section-intro">Each agent extends a shared <code style="color:var(--accent);background:var(--surface);padding:0.15rem 0.5rem;border-radius:4px;font-family:'JetBrains Mono',monospace;font-size:0.85em;">BaseAgent</code> class wrapping the OpenAI Responses API.</p>
+
+    <div class="agents-grid" style="margin-bottom:4rem;">
+      <div class="agent-card">
+        <div class="agent-num">Agent 01 · History Step</div>
+        <h3>Patient Agent</h3>
+        <p>Simulates the virtual patient. Responses strictly grounded in scenario data — no invented facts. Temperature 0.0 for full determinism. Conditionally discloses sensitive information only when explicitly asked. Keyword-based fallback on LLM failure.</p>
+        <div class="agent-contrib">temp = 0.0 · scenario-grounded</div>
+      </div>
+      <div class="agent-card">
+        <div class="agent-num">Agent 02 · Cleaning Step</div>
+        <h3>Staff Nurse Agent</h3>
+        <p>Conversational supervising nurse. Operates in two modes: guidance mode (step explanations when asked) and verification mode (triggered by keywords like "verify" or "check" — returns approved / rejected / incomplete verdict).</p>
+        <div class="agent-contrib">guidance + verification</div>
+      </div>
+      <div class="agent-card">
+        <div class="agent-num">Agent 03 · Post-History</div>
+        <h3>Knowledge Agent</h3>
+        <p>RAG-grounded evaluation of the full history transcript. Returns boolean checklist: identity, allergies, pain, medical history, procedure explained, and (for diabetic scenarios) risk factors assessed.</p>
+        <div class="agent-contrib">60% of History score</div>
+      </div>
+      <div class="agent-card">
+        <div class="agent-num">Agent 04 · Post-History</div>
+        <h3>Communication Agent</h3>
+        <p>Evaluates communication quality and style — self-introduction, empathy, open vs. closed questions, jargon avoidance, and turn count. Heuristic: ≥4 turns = Appropriate, ≥2 = Partially Appropriate.</p>
+        <div class="agent-contrib">40% of History score</div>
+      </div>
+      <div class="agent-card det">
+        <div class="agent-num">Agent 05 · Cleaning Step</div>
+        <h3>Clinical Agent</h3>
+        <p>Hybrid architecture. Pass/fail is 100% deterministic via a hardcoded prerequisite map — LLM is never consulted for the verdict. The LLM is invoked only to explain why a skipped step matters, personalised to patient risk profile.</p>
+        <div class="agent-contrib">deterministic + LLM explanation</div>
+      </div>
+      <div class="agent-card">
+        <div class="agent-num">Agent 06 · Post-Step</div>
+        <h3>Feedback Narrator Agent</h3>
+        <p>Synthesises all raw agent outputs into one supportive student-facing paragraph. Acknowledges strengths first, embeds the score naturally, closes with encouragement. Explicitly avoids punitive language.</p>
+        <div class="agent-contrib">formative synthesis</div>
+      </div>
+    </div>
+
+    <!-- RAG + SCORING -->
+    <div class="two-col" style="margin-bottom:4rem;">
+      <div>
+        <div class="section-label">Knowledge Retrieval</div>
+        <h2 style="margin-bottom:1.5rem;">RAG Pipeline</h2>
+        <div class="rag-box">
+          <h3>How It Works</h3>
+          <div class="rag-flow">
+            <div class="rag-step"><div class="rag-step-dot"></div>Student action or transcript triggers evaluation</div>
+            <div class="rag-arrow">↓</div>
+            <div class="rag-step"><div class="rag-step-dot"></div>Dynamic RAG query built from step + scenario + clinical context</div>
+            <div class="rag-arrow">↓</div>
+            <div class="rag-step"><div class="rag-step-dot"></div>HyDE query generator creates hypothetical guideline paragraph (LLM)</div>
+            <div class="rag-arrow">↓</div>
+            <div class="rag-step"><div class="rag-step-dot"></div>Semantic similarity search in OpenAI Vector Store</div>
+            <div class="rag-arrow">↓</div>
+            <div class="rag-step"><div class="rag-step-dot"></div>Relevant guideline passages injected into agent system prompt</div>
+            <div class="rag-arrow">↓</div>
+            <div class="rag-step"><div class="rag-step-dot"></div>Evidence-based, grounded feedback generated</div>
+          </div>
+          <div class="guidelines-list">
+            <div class="guideline-item">Diabetic Wound Care Guidelines</div>
+            <div class="guideline-item">History Taking Evaluation Guidelines</div>
+            <div class="guideline-item">Wound Cleaning & Dressing Guidelines</div>
+          </div>
+        </div>
+      </div>
+
+      <div>
+        <div class="section-label">History Step Scoring</div>
+        <h2 style="margin-bottom:1.5rem;">Scoring Rubric</h2>
+        <table class="score-table">
+          <thead>
+            <tr>
+              <th>Criterion</th>
+              <th>With Risk Factors</th>
+              <th>Without</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr><td>Identity confirmed</td><td><span class="score-pill">15%</span></td><td><span class="score-pill">15%</span></td></tr>
+            <tr><td>Allergies checked</td><td><span class="score-pill">25%</span></td><td><span class="score-pill">30%</span></td></tr>
+            <tr><td>Pain assessed</td><td><span class="score-pill">20%</span></td><td><span class="score-pill">20%</span></td></tr>
+            <tr><td>Medical history taken</td><td><span class="score-pill">20%</span></td><td><span class="score-pill">20%</span></td></tr>
+            <tr><td>Procedure explained</td><td><span class="score-pill">10%</span></td><td><span class="score-pill">15%</span></td></tr>
+            <tr><td>Risk factors assessed</td><td><span class="score-pill">10%</span></td><td><span class="score-pill">—</span></td></tr>
+          </tbody>
+        </table>
+        <div style="margin-top:1rem;font-size:0.82rem;color:var(--muted);line-height:1.7;">
+          Knowledge Agent contributes <strong style="color:var(--accent)">60%</strong> · Communication Agent contributes <strong style="color:var(--accent2)">40%</strong><br>
+          <span style="color:var(--ext-green);">● Excellent ≥85%</span> &nbsp;
+          <span style="color:var(--accent);">● Good ≥70%</span> &nbsp;
+          <span style="color:var(--audio-amber);">● Adequate ≥50%</span> &nbsp;
+          <span style="color:#f87171;">● Needs Improvement &lt;50%</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- TECH STACK -->
+    <div class="section-label">Implementation</div>
+    <h2 style="margin-bottom:1.5rem;">Technology Stack</h2>
+    <div class="stack-grid">
+      <div class="stack-item">
+        <div class="stack-layer">Backend Framework</div>
+        <div class="stack-tech">FastAPI · Python</div>
+      </div>
+      <div class="stack-item">
+        <div class="stack-layer">LLM Engine</div>
+        <div class="stack-tech">OpenAI GPT</div>
+      </div>
+      <div class="stack-item">
+        <div class="stack-layer">RAG / Vector Store</div>
+        <div class="stack-tech">OpenAI Vector Stores</div>
+      </div>
+      <div class="stack-item">
+        <div class="stack-layer">Speech-to-Text</div>
+        <div class="stack-tech">Groq Whisper v3</div>
+      </div>
+      <div class="stack-item">
+        <div class="stack-layer">Text-to-Speech</div>
+        <div class="stack-tech">Groq Orpheus v1</div>
+      </div>
+      <div class="stack-item">
+        <div class="stack-layer">Database</div>
+        <div class="stack-tech">Firebase Firestore</div>
+      </div>
+      <div class="stack-item">
+        <div class="stack-layer">Real-time Comms</div>
+        <div class="stack-tech">WebSockets + REST</div>
+      </div>
+      <div class="stack-item">
+        <div class="stack-layer">VR Client</div>
+        <div class="stack-tech">Unity</div>
+      </div>
+      <div class="stack-item">
+        <div class="stack-layer">Teacher Portal</div>
+        <div class="stack-tech">React + Vite</div>
+      </div>
+      <div class="stack-item">
+        <div class="stack-layer">Unit Testing</div>
+        <div class="stack-tech">pytest</div>
+      </div>
+      <div class="stack-item">
+        <div class="stack-layer">Integration Testing</div>
+        <div class="stack-tech">FastAPI TestClient</div>
+      </div>
+      <div class="stack-item">
+        <div class="stack-layer">Visualisation</div>
+        <div class="stack-tech">Matplotlib + Seaborn</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<div class="divider"></div>
+
+<!-- RESULTS -->
+<section id="results">
+  <div class="container fade-in">
+    <div class="section-label">Evaluation</div>
+    <h2>Results &amp; Analysis</h2>
+    <p class="section-intro">A six-pillar evaluation framework was designed for AI-enabled educational systems. All evaluations were implemented as automated scripts for reproducibility.</p>
+
+    <!-- EVAL PILLARS -->
+    <div class="eval-grid">
+      <div class="eval-card">
+        <div class="eval-num">01</div>
+        <h3>Unit Testing</h3>
+        <p>Deterministic logic correctness via pytest — state machine, MCQ evaluator, scoring engine, Clinical Agent prerequisite validation.</p>
+      </div>
+      <div class="eval-card">
+        <div class="eval-num">02</div>
+        <h3>Integration Testing</h3>
+        <p>Full API lifecycle and session flow via FastAPI TestClient — REST endpoints, WebSockets, RAG pipeline, student log persistence.</p>
+      </div>
+      <div class="eval-card">
+        <div class="eval-num">03</div>
+        <h3>AI Agent Evaluation</h3>
+        <p>Golden dataset approach — synthetic transcripts with known ground truth labels. LLM-as-judge rubric for Feedback Narrator Agent.</p>
+      </div>
+      <div class="eval-card">
+        <div class="eval-num">04</div>
+        <h3>Performance Testing</h3>
+        <p>P50 / P95 latency profiling using time.perf_counter() across 20 iterations per operation for all major system endpoints.</p>
+      </div>
+      <div class="eval-card">
+        <div class="eval-num">05</div>
+        <h3>Reliability Testing</h3>
+        <p>Fault injection by mocking all four external services — OpenAI LLM, Vector Store, Groq STT/TTS, Firebase Firestore.</p>
+      </div>
+      <div class="eval-card">
+        <div class="eval-num">06</div>
+        <h3>Speech Interface</h3>
+        <p>STT accuracy via Word Error Rate on recorded nursing dialogue samples. TTS round-trip intelligibility test via re-transcription.</p>
+      </div>
+    </div>
+
+    <!-- KEY METRICS -->
+    <div class="metrics-grid">
+      <div class="metric-box">
+        <div class="metric-value green">100%</div>
+        <div class="metric-label">Unit Test Pass Rate<br>22 tests · 4 components</div>
+      </div>
+      <div class="metric-box">
+        <div class="metric-value blue">0.94</div>
+        <div class="metric-label">Knowledge Agent F1 Score<br>Precision 0.96 · Recall 0.93</div>
+      </div>
+      <div class="metric-box">
+        <div class="metric-value purple">1.00</div>
+        <div class="metric-label">Communication Agent Accuracy<br>95% consistency rate</div>
+      </div>
+      <div class="metric-box">
+        <div class="metric-value green">100%</div>
+        <div class="metric-label">Fault Injection Recovery<br>0 crashes · 0 unhandled errors</div>
+      </div>
+    </div>
+
+    <!-- LATENCY TABLE -->
+    <h3 style="font-family:'Syne',sans-serif;font-weight:700;color:var(--heading);margin-bottom:1rem;">Performance Latency (P50 / P95)</h3>
+    <table class="latency-table">
+      <thead>
+        <tr>
+          <th>Operation</th>
+          <th>P50 Latency</th>
+          <th>P95 Latency</th>
+          <th>Notes</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>Patient response generation (LLM + TTS)</td>
+          <td><span class="latency-val">7.09 s</span></td>
+          <td><span class="latency-val">—</span></td>
+          <td style="color:var(--muted);font-size:0.82rem;">Real-time VR interaction</td>
+        </tr>
+        <tr>
+          <td>Action validation — Clinical Agent</td>
+          <td><span class="latency-val">~1.2 s</span></td>
+          <td><span class="latency-val">~1.7 s</span></td>
+          <td style="color:var(--muted);font-size:0.82rem;">Near-instant deterministic path</td>
+        </tr>
+        <tr>
+          <td>Nurse verification response</td>
+          <td><span class="latency-val">4.89 s</span></td>
+          <td><span class="latency-val">—</span></td>
+          <td style="color:var(--muted);font-size:0.82rem;">Acceptable for step pacing</td>
+        </tr>
+        <tr>
+          <td>History evaluation (RAG + 2 agents + narrator)</td>
+          <td><span class="latency-val">77.54 s</span></td>
+          <td><span class="latency-val">—</span></td>
+          <td style="color:var(--audio-amber);font-size:0.82rem;">End-of-step batch — sequential API calls</td>
+        </tr>
+        <tr>
+          <td>MCQ evaluation (deterministic)</td>
+          <td><span class="latency-val">0.02 s</span></td>
+          <td><span class="latency-val">0.05 s</span></td>
+          <td style="color:var(--ext-green);font-size:0.82rem;">Near-instantaneous</td>
+        </tr>
+        <tr>
+          <td>STT transcription (Groq Whisper)</td>
+          <td><span class="latency-val">0.67 s</span></td>
+          <td><span class="latency-val">0.89 s</span></td>
+          <td style="color:var(--ext-green);font-size:0.82rem;">Suitable for real-time VR</td>
+        </tr>
+        <tr>
+          <td>TTS synthesis (Groq Orpheus)</td>
+          <td><span class="latency-val">0.82 s</span></td>
+          <td><span class="latency-val">0.98 s</span></td>
+          <td style="color:var(--ext-green);font-size:0.82rem;">Scales linearly with text length</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <!-- SPEECH RESULTS -->
+    <div class="two-col">
+      <div class="eval-card">
+        <h3 style="font-family:'Syne',sans-serif;font-weight:700;color:var(--heading);margin-bottom:0.8rem;">🎙️ Speech-to-Text (STT)</h3>
+        <p style="font-size:0.88rem;color:var(--muted);margin-bottom:1rem;">Model: Groq Whisper Large v3 — evaluated on recorded nursing dialogue samples with known ground truth transcripts.</p>
+        <div style="display:flex;gap:1.5rem;">
+          <div>
+            <div style="font-family:'Syne',sans-serif;font-weight:800;font-size:1.8rem;color:var(--accent);">0.13</div>
+            <div style="font-size:0.78rem;color:var(--muted);">Average WER<br>(Word Error Rate)</div>
+          </div>
+          <div>
+            <div style="font-family:'Syne',sans-serif;font-weight:800;font-size:1.8rem;color:var(--ext-green);">0.67s</div>
+            <div style="font-size:0.78rem;color:var(--muted);">P50 Latency<br>(P95: 0.89s)</div>
+          </div>
+        </div>
+      </div>
+      <div class="eval-card">
+        <h3 style="font-family:'Syne',sans-serif;font-weight:700;color:var(--heading);margin-bottom:0.8rem;">🔊 Text-to-Speech (TTS)</h3>
+        <p style="font-size:0.88rem;color:var(--muted);margin-bottom:1rem;">Model: Groq Orpheus v1 — round-trip intelligibility test (text → TTS → audio → STT → compare). Three distinct character voices.</p>
+        <div style="display:flex;gap:1.5rem;">
+          <div>
+            <div style="font-family:'Syne',sans-serif;font-weight:800;font-size:1.8rem;color:var(--accent);">0.13</div>
+            <div style="font-size:0.78rem;color:var(--muted);">Round-Trip WER<br>(intelligibility confirmed)</div>
+          </div>
+          <div>
+            <div style="font-family:'Syne',sans-serif;font-weight:800;font-size:1.8rem;color:var(--ext-green);">0.82s</div>
+            <div style="font-size:0.78rem;color:var(--muted);">P50 Latency<br>(P95: 0.98s)</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<div class="divider"></div>
+
+<!-- IMPACT & LIMITATIONS -->
+<section id="impact">
+  <div class="container fade-in">
+    <div class="section-label">Discussion</div>
+    <h2>Impact, Limitations &amp; Future Work</h2>
+
+    <div class="impact-three">
+      <div class="impact-card green-card">
+        <h3>Impact &amp; Contributions</h3>
+        <ul>
+          <li>First multi-agent LLM framework for automated feedback in VR nursing education</li>
+          <li>Proves hybrid deterministic + LLM architecture can safely evaluate clinical competence</li>
+          <li>RAG grounding makes feedback quality independent of training data recency</li>
+          <li>Teacher Portal enables curriculum expansion at runtime — no developer involvement</li>
+          <li>Architecture is transferable to other nursing procedures and clinical domains</li>
+        </ul>
+      </div>
+      <div class="impact-card red-card">
+        <h3>Limitations</h3>
+        <ul>
+          <li>History evaluation pipeline at 77.54s P50 — driven by sequential external API calls</li>
+          <li>Communication Agent has 5% inconsistency rate on borderline transcripts (LLM non-determinism)</li>
+          <li>Only two clinical scenarios currently implemented</li>
+          <li>Depends entirely on external APIs — availability and cost are deployment constraints</li>
+          <li>No formal user study with real nursing students or clinical educators yet conducted</li>
+        </ul>
+      </div>
+      <div class="impact-card blue-card">
+        <h3>Future Work</h3>
+        <ul>
+          <li>Parallelise agent LLM calls to significantly reduce history evaluation latency</li>
+          <li>Expand to additional nursing procedures — medication administration, IV cannulation</li>
+          <li>Implement adaptive difficulty that scales with student performance over time</li>
+          <li>Build longitudinal student progress dashboards for clinical educators</li>
+          <li>Conduct formal user studies with nursing students to validate pedagogical effectiveness</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
+
+<div class="divider"></div>
+
+<!-- CONCLUSION -->
+<section id="conclusion">
+  <div class="container fade-in">
+    <div class="section-label">Summary</div>
+    <h2>Conclusion</h2>
+    <p class="section-intro">This project demonstrates a viable, extensible architecture for automated formative feedback in clinical VR training — removing the dependency on real-time human supervisor availability.</p>
+
+    <div class="conclusion-grid">
+      <div class="conclusion-card">
+        <div class="icon">🏗️</div>
+        <h3>Technical Achievement</h3>
+        <p>A six-agent multi-agent LLM system with deterministic safety guarantees, RAG-grounded feedback, real-time multi-voice interaction, and a teacher management portal — all operating on a FastAPI backend connected to a Unity VR client.</p>
+      </div>
+      <div class="conclusion-card">
+        <div class="icon">📊</div>
+        <h3>Evaluation Confidence</h3>
+        <p>100% pass rate on unit and reliability tests. Knowledge Agent F1 of 0.94, Communication Agent accuracy of 1.00, and a speech interface with sub-one-second latency. Six-pillar framework confirms system readiness.</p>
+      </div>
+      <div class="conclusion-card">
+        <div class="icon">🔬</div>
+        <h3>Research Contribution</h3>
+        <p>Demonstrates that a hybrid deterministic-plus-LLM architecture is a safe approach to automated clinical feedback — one that scales to support nursing students without a human supervisor being present for every session.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<div class="divider"></div>
+
+<!-- PUBLICATIONS -->
+<section id="publications">
+  <div class="container fade-in">
+    <div class="section-label">Publications</div>
+    <h2>Publications</h2>
+    <div class="pub-item">
+      <span class="pub-icon">📄</span>
+      <span>Semester 7 Report — <em>Multi-Agent LLM Framework for Automated Feedback in VR Nursing Training</em> · Coming soon</span>
+    </div>
+    <div class="pub-item">
+      <span class="pub-icon">🖥️</span>
+      <span>Semester 7 Slides — Presentation slides available via the repository</span>
+    </div>
+    <div class="pub-item">
+      <span class="pub-icon">📝</span>
+      <span>Malintha K.M.K., Fernando A.I., Wickramaarachchi P.A. et al. — <em>"Multi-Agent LLM Framework for Automated Feedback in VR Nursing Training"</em> · 2025</span>
+    </div>
+  </div>
+</section>
+
+<div class="divider"></div>
+
+<!-- LINKS -->
+<section id="links">
+  <div class="container fade-in">
+    <div class="section-label">Resources</div>
+    <h2>Links</h2>
+    <div class="links-grid">
+      <a class="link-card" href="https://github.com/cepdnaclk/e20-4yp-Multi-Agent-LLM-Framework-for-Automated-Feedback-in-VR-Nursing-Training" target="_blank">
+        <span class="link-icon">📦</span>
+        <span class="link-label">Project Repository</span>
+        <span class="link-url">github.com/cepdnaclk</span>
+      </a>
+      <a class="link-card" href="https://github.com/kushanmalintha/FYP-WoundCareSim-Unity.git" target="_blank">
+        <span class="link-icon">🥽</span>
+        <span class="link-label">Unity VR Assets</span>
+        <span class="link-url">FYP-WoundCareSim-Unity</span>
+      </a>
+      <a class="link-card" href="https://cepdnaclk.github.io/e20-4yp-Multi-Agent-LLM-Framework-for-Automated-Feedback-in-VR-Nursing-Training" target="_blank">
+        <span class="link-icon">🌐</span>
+        <span class="link-label">Project Page</span>
+        <span class="link-url">cepdnaclk.github.io</span>
+      </a>
+      <a class="link-card" href="http://www.ce.pdn.ac.lk/" target="_blank">
+        <span class="link-icon">🏛️</span>
+        <span class="link-label">Department of CE</span>
+        <span class="link-url">University of Peradeniya</span>
+      </a>
+    </div>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer>
+  <div class="container">
+    <p>Department of Computer Engineering · University of Peradeniya · 2025</p>
+    <p style="margin-top:0.4rem;">E20-4YP · Group 27 · <a href="http://www.ce.pdn.ac.lk/">ce.pdn.ac.lk</a></p>
+  </div>
+</footer>
+
+<script>
+  // Scroll animation
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach(e => {
+      if (e.isIntersecting) {
+        e.target.classList.add('visible');
+      }
+    });
+  }, { threshold: 0.1 });
+
+  document.querySelectorAll('.fade-in').forEach(el => observer.observe(el));
+</script>
+</body>
+</html>
